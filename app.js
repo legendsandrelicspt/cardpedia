@@ -125,7 +125,8 @@ function visibleListings() {
 
 function productMarkup(item) {
   const favorite = state.favorites.has(item.id);
-  const conditionLabel = item.condition === "NM" ? "Near Mint" : item.condition === "LP" ? "Lightly Played" : "Sealed";
+  const conditionLabels = {M:"Mint",NM:"Near Mint",EX:"Excellent",GD:"Good",LP:"Lightly Played",PL:"Played",PO:"Poor",MP:"Moderately Played",HP:"Heavily Played",DMG:"Damaged",graded:"Graded",sealed:"Sealed"};
+  const conditionLabel = conditionLabels[item.condition] || item.condition;
   const gameClass = item.game === "Yu-Gi-Oh!" ? "yu-gi-oh" : item.game.toLowerCase().replace(/[^a-z]+/g, "-");
   return `
     <article class="product-card">
@@ -473,7 +474,7 @@ listingForm.addEventListener("submit", async (event) => {
     "Yu-Gi-Oh!":"yugioh", "Lorcana":"lorcana", "Riftbound":"riftbound", "Sealed":"sealed"
   };
   const modeMap = {buy:"sale",trade:"trade",both:"sale_or_trade"};
-  const conditionMap = {M:"mint",NM:"near_mint",LP:"lightly_played",MP:"moderately_played",HP:"heavily_played",DMG:"damaged",sealed:"sealed"};
+  const conditionMap = {M:"mint",NM:"near_mint",EX:"excellent",GD:"good",LP:"lightly_played",PL:"played",PO:"poor",MP:"moderately_played",HP:"heavily_played",DMG:"damaged",graded:"graded",sealed:"sealed"};
   listingSubmit.disabled = true;
   listingFeedback.textContent = "Saving your draft and uploading photos…";
   let listingId = null;
@@ -490,6 +491,7 @@ listingForm.addEventListener("submit", async (event) => {
       rarity,
       has_defects: defectCheckbox.checked,
       price_amount: Number(form.get("price")),
+      quantity: Number(form.get("quantity")),
       status: "draft"
     }).select("id").single();
     if (draftError) throw draftError;
@@ -520,7 +522,7 @@ listingForm.addEventListener("submit", async (event) => {
     const game=form.get("game"), modeValue=form.get("mode");
     const item={
       id:Date.now(),name:String(form.get("name")).trim(),game,category:game,
-      price:Number(form.get("price")),condition:form.get("condition"),
+      price:Number(form.get("price")),quantity:Number(form.get("quantity")),condition:form.get("condition"),
       badge:modeValue==="trade"?"For trade":"New listing",seller:session.user.user_metadata?.username||session.user.email.split("@")[0],
       rating:"★ new",emoji:game==="Pokémon"?"✦":game==="Magic"?"◈":game==="One Piece"?"☠":game==="Lorcana"?"✧":game==="Riftbound"?"◈":"♢",
       art:game==="Sealed"?"art-sealed":game==="Magic"?"art-magic":game==="One Piece"?"art-pirate":game==="Yu-Gi-Oh!"?"art-dragon":game==="Lorcana"?"art-gold":game==="Riftbound"?"art-magic":"art-pokemon",
