@@ -574,10 +574,12 @@ document.querySelector("#pokemon-scan-identify").addEventListener("click",async(
     if(!data?.success||detections.length===0)throw new Error("No card was identified. Try a sharper photo with one card filling the frame.");
     if(detections.length!==1)throw new Error("More than one card was detected. Retake the photo with only one card visible.");
     const detection=detections[0],card=detection.card||{};
-    if(!card.name)throw new Error("The service did not return a card name. Try another photo.");
+    if(!card.name||!card.id)throw new Error("No exact card match was returned. Try another photo or use catalogue search.");
     listingForm.querySelector("[name='name']").value=card.name;
-    if(card.releaseName)setNameInput.value=card.releaseName;
-    pokemonCardSelection.textContent="Photo match: "+card.name+" · Confidence: "+(detection.confidence||"not provided")+". Confirm the set and number before publishing.";
+    setNameInput.value=card.setName||card.releaseName||"";
+    setCodeInput.value=card.setId||"";
+    collectorNumberInput.value=card.number||"";
+    pokemonCardSelection.textContent="Photo match: "+card.name+" · "+(card.setName||card.releaseName||"Set unknown")+" · "+(card.number||"Number unknown")+" · Confidence: "+(detection.confidence||"not provided")+". Confirm details before publishing.";
     pokemonScanStatus.textContent="Card identified. Check the details and condition before publishing.";
     listingForm.querySelector("[name='catalog_source']").value="cardsight";
     listingForm.querySelector("[name='catalog_card_id']").value=card.id||"";
