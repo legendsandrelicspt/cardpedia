@@ -659,3 +659,5 @@ button:disabled { cursor: not-allowed; opacity: .55; }
  .account-page .my-listing-row { grid-template-columns:1fr; gap:12px; }
  .account-page .my-listing-actions { justify-content:flex-start; }
 }
+
+.pokemon-catalog-preview{display:flex;align-items:center;gap:12px;margin:12px 0;padding:10px;border:1px solid var(--border);border-radius:10px;background:#f8f8f4}.pokemon-catalog-preview img{width:84px;height:116px;object-fit:contain}.pokemon-catalog-preview span{font-size:11px;color:var(--muted)}.pokemon-scan-box{margin-top:14px;padding:13px;border:1px dashed #b9c2ae;border-radius:10px;background:#fbfcf8}.pokemon-scan-box strong{display:block;font-size:13px}.pokemon-scan-box p{margin:5px 0 10px;font-size:11px;color:var(--muted);line-height:1.5}.scan-upload-label{position:relative;overflow:hidden;cursor:pointer}.scan-upload-label input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}.pokemon-scan-preview{display:flex;align-items:center;gap:12px;margin-top:12px}.pokemon-scan-preview img{width:100px;max-height:145px;object-fit:contain;border:1px solid var(--border);border-radius:6px}
