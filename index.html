@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#11130f" />
+    <meta
+      name="description"
+      content="Buy, sell and trade collectible cards and sealed products with Europe's Cardpedia community."
+    />
+    <title>Cardpedia — Europe's collectible marketplace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="announcement-bar"><span>THE EUROPEAN COLLECTOR'S MARKETPLACE</span><span class="announcement-note">Independent collectors · 20+ countries</span></div>
+    <header class="site-header">
+      <a class="brand" href="#" aria-label="Cardpedia home">
+        <span class="brand-mark" aria-hidden="true">c</span>
+        <span>cardpedia<span class="brand-period">.</span></span>
+      </a>
+
+      <nav class="main-nav" aria-label="Main navigation">
+        <a class="nav-link active" href="#mercado">Discover</a>
+        <a class="nav-link" href="#categorias">Categories</a>
+        <a class="nav-link" href="#protection">Safety</a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="icon-button wishlist-shortcut" id="favorites-button" aria-label="View favourites">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.7c0 4.1-8.8 10-8.8 10s-8.8-5.9-8.8-10a4.8 4.8 0 0 1 8.8-2.6 4.8 4.8 0 0 1 8.8 2.6Z" /></svg>
+          <span class="favorites-count" id="favorites-count">0</span>
+        </button>
+        <button class="button button-outline sell-button" id="sell-button">Sell or trade</button>
+        <button class="icon-button cart-button" id="cart-button" aria-label="Open basket">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.1a2 2 0 0 0 2 1.6h8.5a2 2 0 0 0 1.9-1.4L21 8H6" /><circle cx="10" cy="20" r="1" /><circle cx="18" cy="20" r="1" /></svg>
+          <span class="cart-count" id="cart-count">0</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-content">
+          <div class="eyebrow"><span class="live-dot"></span> Europe's collectible marketplace</div>
+          <h1 id="hero-title">Your next<br />great <span>find.</span></h1>
+          <p>Find the card. Make the trade. Give your collection room to grow.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#mercado">Explore the marketplace <span aria-hidden="true">↗</span></a>
+            <button class="text-button" id="hero-sell-button">List an item <span aria-hidden="true">→</span></button>
+          </div>
+          <div class="community-proof">
+            <div class="avatar-stack" aria-hidden="true"><span>R</span><span>M</span><span>T</span><span>+</span></div>
+            <div><strong>12,000+</strong><span> collectors already here</span></div>
+          </div>
+        </div>
+        <div class="hero-art" aria-label="Featured collectible cards">
+          <div class="hero-orbit orbit-one"></div>
+          <div class="hero-orbit orbit-two"></div>
+          <div class="hero-card hero-card-back"><span>CP</span></div>
+          <div class="hero-card hero-card-middle"><div class="hero-card-art">✦</div><span>STARRY NIGHT</span><small>001 / 150</small></div>
+          <div class="hero-card hero-card-front"><div class="hero-card-art">◈</div><span>DRAGON'S VOW</span><small>RARE · FOIL</small></div>
+          <div class="floating-tag"><span class="tag-spark">✦</span><span><strong>Find your grail</strong><small>Fresh finds from across Europe</small></span></div>
+          <span class="hero-spark spark-one">✳</span><span class="hero-spark spark-two">✦</span>
+        </div>
+        <div class="hero-bottom">
+          <span>Pokémon</span><i></i><span>Magic: The Gathering</span><i></i><span>One Piece</span><i></i><span>Yu-Gi-Oh!</span>
+        </div>
+      </section>
+
+      <section class="market-section" id="mercado">
+        <div class="market-intro">
+          <div>
+            <span class="section-kicker">The marketplace</span>
+            <h2>Good collections start <span>somewhere.</span></h2>
+            <p>Discover something worth keeping.</p>
+          </div>
+          <a class="view-all" href="#listings">View all listings <span>→</span></a>
+        </div>
+
+        <div class="market-toolbar">
+          <label class="search-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></svg>
+            <input id="search-input" type="search" placeholder="Search cards, sets, sellers..." autocomplete="off" />
+            <kbd>⌘ K</kbd>
+          </label>
+          <div class="toolbar-right">
+            <div class="trade-toggle" role="group" aria-label="Listing type">
+              <button class="toggle-option selected" data-mode="all" aria-pressed="true">All</button>
+              <button class="toggle-option" data-mode="buy" aria-pressed="false">For sale</button>
+              <button class="toggle-option" data-mode="trade" aria-pressed="false">Trade</button>
+            </div>
+            <label class="sort-select">
+              <span class="sr-only">Sort listings</span>
+              <select id="sort-select"><option value="featured">Featured</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select>
+            </label>
+          </div>
+        </div>
+
+        <div class="category-row" id="categorias" role="group" aria-label="Filter by category">
+          <button class="category-chip selected" data-category="all"><span>✦</span> All categories</button>
+          <button class="category-chip" data-category="Pokémon"><span>◉</span> Pokémon</button>
+          <button class="category-chip" data-category="Magic"><span>✧</span> Magic</button>
+          <button class="category-chip" data-category="One Piece"><span>☠</span> One Piece</button>
+          <button class="category-chip" data-category="Yu-Gi-Oh!"><span>♢</span> Yu-Gi-Oh!</button>
+          <button class="category-chip" data-category="Sealed"><span>▣</span> Sealed</button>
+        </div>
+
+        <div class="listing-heading" id="listings">
+          <h3>Community finds <span class="listing-count" id="listing-count"></span></h3>
+          <button class="filter-button" id="filter-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 12h10m-7 5h4" /><circle cx="8" cy="7" r="1.5" /><circle cx="15" cy="12" r="1.5" /><circle cx="12" cy="17" r="1.5" /></svg> Filters <span class="filter-indicator" id="filter-indicator"></span></button>
+        </div>
+
+        <div class="filters-panel" id="filters-panel" hidden>
+          <label>Condition<select id="condition-filter"><option value="all">Any condition</option><option value="NM">Near Mint</option><option value="LP">Lightly Played</option><option value="sealed">Sealed</option></select></label>
+          <label>Maximum price <span class="price-filter-value" id="price-filter-value">€500</span><input id="price-filter" type="range" min="5" max="500" step="5" value="500" /></label>
+          <button class="clear-filters" id="clear-filters">Clear filters</button>
+        </div>
+
+        <div class="product-grid" id="product-grid" aria-live="polite"></div>
+        <div class="empty-state" id="empty-state" hidden><span>⌕</span><h3>No grails found this time.</h3><p>Try adjusting your search or filters.</p><button class="button button-outline" id="empty-reset">Clear filters</button></div>
+        <div class="load-more-wrap"><button class="button button-outline load-more" id="load-more">Explore more listings <span>↓</span></button></div>
+      </section>
+
+      <section class="sell-banner" id="como-funciona">
+        <div class="banner-icon">↗</div>
+        <div><span class="section-kicker">Make room for your next find</span><h2>Your next collector is <span>out there.</span></h2><p>Reach a community that cares. List your item in under a minute.</p></div>
+        <button class="button button-dark" id="banner-sell-button">Create a listing <span>→</span></button>
+        <div class="banner-decoration" aria-hidden="true">✳</div>
+      </section>
+
+      <section class="protection-section" id="protection">
+        <div class="protection-intro">
+          <span class="section-kicker">A clearer way to collect</span>
+          <h2>Good trades start with <span>good ground rules.</span></h2>
+          <p>Know what happens before you agree to a sale or swap.</p>
+        </div>
+        <div class="protection-grid">
+          <article class="protection-card">
+            <span class="protection-step">01</span>
+            <h3>Agree before you pay</h3>
+            <p>Confirm the exact item, condition, total cost and tracked shipping with the other collector.</p>
+          </article>
+          <article class="protection-card">
+            <span class="protection-step">02</span>
+            <h3>Keep proof of postage</h3>
+            <p>For swaps, both collectors should use tracked delivery and share proof before marking items received.</p>
+          </article>
+          <article class="protection-card">
+            <span class="protection-step">03</span>
+            <h3>Ask for a fair review</h3>
+            <p>If something goes wrong, record the details and give both sides a chance to explain.</p>
+          </article>
+        </div>
+        <div class="protection-note">
+          <span aria-hidden="true">ⓘ</span>
+          <p><strong>Prototype notice:</strong> Cardpedia does not hold payments, contact sellers or currently handle cases. Mediation screens are demos only — no request is sent and no payment is protected.</p>
+          <div class="protection-actions">
+            <button class="text-button protection-preview" id="protection-preview">Preview the flow <span aria-hidden="true">→</span></button>
+            <button class="text-button report-issue-button" id="report-issue">Report a transaction issue <span aria-hidden="true">↗</span></button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a class="brand footer-brand" href="#"><span class="brand-mark" aria-hidden="true">c</span><span>cardpedia<span class="brand-period">.</span></span></a>
+      <span>Made for collectors. © 2026 Cardpedia</span>
+      <div><a href="#como-funciona">Help</a><a href="#como-funciona">Safety</a><a href="#como-funciona">About</a></div>
+    </footer>
+
+    <div class="overlay" id="overlay" hidden></div>
+    <aside class="cart-drawer" id="cart-drawer" aria-label="Your basket" aria-hidden="true">
+      <div class="drawer-header"><div><span class="section-kicker">Your selection</span><h2>Basket <span id="drawer-count">(0)</span></h2></div><button class="close-button" data-close aria-label="Close basket">×</button></div>
+      <div class="cart-items" id="cart-items"></div>
+      <div class="cart-empty" id="cart-empty"><span>🛒</span><h3>Your basket is waiting.</h3><p>There’s something out there with your name on it.</p></div>
+      <div class="cart-footer" id="cart-footer"><div class="cart-total"><span>Subtotal</span><strong id="cart-total">€0.00</strong></div>      <p>Shipping is arranged directly with the seller.</p><button class="button button-primary checkout-button" id="checkout-button">Review purchase steps <span>→</span></button></div>
+    </aside>
+
+    <section class="modal" id="listing-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+      <div class="modal-header"><div><span class="section-kicker">Give it a new home</span><h2 id="modal-title">Create a listing</h2></div><button class="close-button" data-close aria-label="Close dialog">×</button></div>
+      <p class="modal-intro">Tell the community what you’re selling or looking to trade.</p>
+      <form id="listing-form">
+        <label>Item name<input name="name" required maxlength="70" placeholder="e.g. Charizard ex — 199/165" /></label>
+        <div class="form-row"><label>Game<select name="game" required><option value="">Choose a game</option><option>Pokémon</option><option>Magic</option><option>One Piece</option><option>Yu-Gi-Oh!</option><option>Sealed</option></select></label><label>Condition<select name="condition" required><option value="NM">Near Mint</option><option value="LP">Lightly Played</option><option value="sealed">Sealed</option></select></label></div>
+        <div class="form-row"><label>Price (€)<input name="price" type="number" min="0.01" step="0.01" required placeholder="0.00" /></label><label>Listing type<select name="mode"><option value="buy">For sale</option><option value="trade">For trade</option><option value="both">Sale or trade</option></select></label></div>
+        <label>Collector notes<textarea name="notes" rows="3" maxlength="180" placeholder="Language, edition, what you’re looking for..."></textarea></label>
+        <button class="button button-primary modal-submit" type="submit">Publish listing <span>→</span></button>
+      </form>
+    </section>
+
+    <section class="modal transaction-modal" id="transaction-modal" role="dialog" aria-modal="true" aria-labelledby="transaction-title" hidden>
+      <div class="modal-header"><div><span class="section-kicker">Community support · demo</span><h2 id="transaction-title">A clearer transaction</h2></div><button class="close-button" data-close aria-label="Close dialog">×</button></div>
+      <div id="transaction-content"></div>
+    </section>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
