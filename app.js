@@ -224,7 +224,7 @@ async function loadMarketplaceListings() {
   if (!supabaseClient) return;
   try {
     const {data:rows,error} = await supabaseClient.from("listings")
-      .select("id,seller_id,title,description,game_id,listing_type,condition,language,price_amount,currency,quantity,rarity,finish,set_name,set_code,collector_number,edition,catalog_source,catalog_card_id,grading_company,grading_grade,created_at,listing_images(storage_path,image_type,sort_order)")
+      .select("id,seller_id,title,description,game_id,listing_type,condition,language,price_amount,currency,quantity,rarity,finish,set_name,set_code,collector_number,edition,catalog_source,catalog_card_id,catalog_image_url,grading_company,grading_grade,created_at,listing_images(storage_path,image_type,sort_order)")
       .eq("status","active").order("created_at",{ascending:false}).limit(100);
     if(error) throw error;
     const sellerIds=[...new Set((rows||[]).map(row=>row.seller_id).filter(Boolean))];
@@ -254,7 +254,7 @@ async function loadMarketplaceListings() {
         condition:conditionToLabel[row.condition]||row.condition,badge:row.condition==="graded"?(row.grading_company+" "+row.grading_grade):row.rarity||"New listing",
         seller,rating:"New seller",emoji:"✦",art:"",visual:"visual-gold",
         mode:row.listing_type==="sale"?"buy":row.listing_type==="trade"?"trade":"both",
-        note,imageUrl:photo?signedByPath.get(photo.storage_path)||"": "",setName:row.set_name,setCode:row.set_code,collectorNumber:row.collector_number,rarityLabel:row.rarity,finish:row.finish,currency:row.currency||"EUR"
+        note,imageUrl:(photo?signedByPath.get(photo.storage_path)||"": "")||row.catalog_image_url||"",setName:row.set_name,setCode:row.set_code,collectorNumber:row.collector_number,rarityLabel:row.rarity,finish:row.finish,currency:row.currency||"EUR"
       };
     });
     if(liveListings.length){
@@ -534,6 +534,13 @@ const manualCardDetails = listingForm.querySelector(".manual-card-details");
 
 const pokemonCardResults = listingForm.querySelector("#pokemon-card-results");
 const pokemonCardSelection = listingForm.querySelector("#pokemon-card-selection");
+const pokemonCatalogPreview=listingForm.querySelector("#pokemon-catalog-preview");
+const pokemonCatalogImage=listingForm.querySelector("#pokemon-catalog-image");
+const pokemonScanInput=listingForm.querySelector("#pokemon-scan-input");
+const pokemonScanPreview=listingForm.querySelector("#pokemon-scan-preview");
+const pokemonScanImage=listingForm.querySelector("#pokemon-scan-image");
+const pokemonScanStatus=listingForm.querySelector("#pokemon-scan-status");
+let pokemonScanObjectUrl=null;
 let pokemonSearchTimer = null;
 let pokemonSearchRequest = 0;
 async function searchPokemonCatalog(term) {
@@ -552,6 +559,8 @@ async function searchPokemonCatalog(term) {
     console.warn("Cardpedia: Pokémon catalogue search failed.",error);
   }
 }
+pokemonScanInput.addEventListener("change",()=>{const file=pokemonScanInput.files && pokemonScanInput.files[0];if(!file)return;if(!file.type.startsWith("image/")||file.size>12582912){pokemonScanStatus.textContent="Choose an image smaller than 12 MB.";pokemonScanInput.value="";return;}if(pokemonScanObjectUrl)URL.revokeObjectURL(pokemonScanObjectUrl);pokemonScanObjectUrl=URL.createObjectURL(file);pokemonScanImage.src=pokemonScanObjectUrl;pokemonScanPreview.hidden=false;pokemonScanStatus.textContent="Photo preview ready. Identification is not yet connected.";});
+document.querySelector("#pokemon-scan-clear").addEventListener("click",()=>{pokemonScanInput.value="";pokemonScanPreview.hidden=true;if(pokemonScanObjectUrl)URL.revokeObjectURL(pokemonScanObjectUrl);pokemonScanObjectUrl=null;});
 pokemonCardSearch.addEventListener("input",()=>{
   clearTimeout(pokemonSearchTimer);
   const term=pokemonCardSearch.value.trim();
@@ -570,6 +579,9 @@ pokemonCardResults.addEventListener("click",async(event)=>{
     const set=card.set||{};
     listingForm.querySelector("[name='catalog_source']").value="tcgdex";
     listingForm.querySelector("[name='catalog_card_id']").value=card.id||cardId;
+    const catalogImageUrl=card.image ? card.image.replace(/\/$/,"")+"/high.webp" : "";
+    listingForm.querySelector("[name='catalog_image_url']").value=catalogImageUrl;
+    if(catalogImageUrl){pokemonCatalogImage.src=catalogImageUrl;pokemonCatalogPreview.hidden=false;pokemonCatalogImage.onerror=()=>{pokemonCatalogPreview.hidden=true;};}
     listingForm.querySelector("[name='name']").value=card.name||"";
     setNameInput.value=set.name||"";
     setCodeInput.value=set.id||"";
@@ -735,6 +747,7 @@ listingForm.addEventListener("submit", async (event) => {
       edition: String(form.get("edition") || "").trim() || null,
       catalog_source: String(form.get("catalog_source") || "").trim() || null,
       catalog_card_id: String(form.get("catalog_card_id") || "").trim() || null,
+      catalog_image_url: String(form.get("catalog_image_url") || "").trim() || null,
       title: String(form.get("name")).trim(),
       description: String(form.get("notes") || "").trim(),
       listing_type: modeMap[form.get("mode")],
