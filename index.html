@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script id="cardpedia-supabase-config" src="supabase-config.js"></script>
-    <script src="app.js?v=21" defer></script>
+    <script src="app.js?v=22" defer></script>
   </head>
   <body>
     <div class="announcement-bar"><span>THE EUROPEAN COLLECTOR'S MARKETPLACE</span><span class="announcement-note">Independent collectors · 20+ countries</span></div>
@@ -213,7 +213,7 @@
             <div id="pokemon-card-results" class="catalog-search-results" aria-live="polite"></div>
             <p id="pokemon-card-selection" class="catalog-selection-note">No card selected yet.</p>
             <div id="pokemon-catalog-preview" class="pokemon-catalog-preview" hidden><img id="pokemon-catalog-image" alt="Selected Pokémon card catalogue image" /><span>Catalogue image preview · not a condition photo</span></div>
-            <div class="pokemon-scan-box"><strong>Identify by photo</strong><p>Take one clear photo of the card front. Secure card recognition will be connected after API credentials are configured.</p><label class="button button-outline scan-upload-label">Take photo / Choose image<input id="pokemon-scan-input" type="file" accept="image/*" capture="environment" /></label><button type="button" class="button button-primary" id="pokemon-scan-identify">Identify card</button><div id="pokemon-scan-preview" class="pokemon-scan-preview" hidden><img id="pokemon-scan-image" alt="Selected card photo" /><button type="button" class="text-button" id="pokemon-scan-clear">Remove photo</button></div><p id="pokemon-scan-status" class="catalog-search-status" aria-live="polite">Photo preview only — identification service not yet connected.</p></div>
+            <div class="pokemon-scan-box"><strong>Identify by photo</strong><p>Take one clear photo of the card front. The scanner identifies one Pokémon card from a photo. Check the detected details before publishing.</p><label class="button button-outline scan-upload-label">Take photo / Choose image<input id="pokemon-scan-input" type="file" accept="image/*" capture="environment" /></label><button type="button" class="button button-primary" id="pokemon-scan-identify">Identify card</button><div id="pokemon-scan-preview" class="pokemon-scan-preview" hidden><img id="pokemon-scan-image" alt="Selected card photo" /><button type="button" class="text-button" id="pokemon-scan-clear">Remove photo</button></div><p id="pokemon-scan-status" class="catalog-search-status" aria-live="polite">Choose a clear photo of one Pokémon card to identify it.</p></div>
             <input type="hidden" name="catalog_source" value="" />
             <input type="hidden" name="catalog_card_id" value="" />
             <input type="hidden" name="catalog_image_url" value="" />
