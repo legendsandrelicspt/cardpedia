@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script id="cardpedia-supabase-config" src="supabase-config.js"></script>
-    <script src="app.js?v=24" defer></script>
+    <script src="app.js?v=25" defer></script>
   </head>
   <body>
     <div class="announcement-bar"><span>THE EUROPEAN COLLECTOR'S MARKETPLACE</span><span class="announcement-note">Independent collectors · 20+ countries</span></div>
@@ -270,6 +270,28 @@
 
       <form id="auth-form">
         <label id="auth-name-wrap" hidden>Username<input name="username" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" autocomplete="username" placeholder="e.g. cardcollector92" /></label>
+        <div id="signup-profile-fields" hidden>
+          <fieldset class="account-type-choice"><legend>Account type</legend>
+            <label><input type="radio" name="account_type" value="individual" checked /> Private collector — free</label>
+            <label><input type="radio" name="account_type" value="professional" /> Professional seller — free</label>
+            <p>Professional accounts are free. Verification may be requested later to display a verified professional badge.</p>
+          </fieldset>
+          <label>Full name<input name="full_name" maxlength="120" autocomplete="name" /></label>
+          <label>Country<select name="country_code" autocomplete="country">
+            <option value="PT">Portugal</option><option value="NO">Norway</option><option value="ES">Spain</option><option value="FR">France</option><option value="DE">Germany</option><option value="IT">Italy</option><option value="GB">United Kingdom</option><option value="NL">Netherlands</option><option value="BE">Belgium</option><option value="US">United States</option><option value="OTHER">Other</option>
+          </select></label>
+          <label>Street address<input name="address_line1" maxlength="180" autocomplete="address-line1" /></label>
+          <label>Apartment, floor, etc. (optional)<input name="address_line2" maxlength="120" autocomplete="address-line2" /></label>
+          <div class="form-row">
+            <label>Postal code<input name="postal_code" maxlength="20" autocomplete="postal-code" /></label>
+            <label>City<input name="city" maxlength="100" autocomplete="address-level2" /></label>
+          </div>
+          <div id="professional-fields" hidden>
+            <label>Business / shop name<input name="business_name" maxlength="160" autocomplete="organization" /></label>
+            <label>VAT / Tax number (optional for now)<input name="vat_number" maxlength="40" /></label>
+            <p>Professional status is free. Business details can be completed and verified later.</p>
+          </div>
+        </div>
         <label>Email address<input name="email" type="email" required autocomplete="email" maxlength="254" placeholder="you@example.com" /></label>
         <label>Password<input name="password" type="password" required minlength="12" autocomplete="current-password" placeholder="At least 12 characters" /></label>
         <button class="button button-primary modal-submit" id="auth-submit" type="submit">Sign in <span>→</span></button>
