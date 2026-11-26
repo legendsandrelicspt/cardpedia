@@ -939,12 +939,55 @@ document.querySelector("#account-button")?.addEventListener("click", () => {
   else openAuthModal();
 });
 document.querySelector("#back-to-marketplace").addEventListener("click",showMarketplacePage);
+function showAccountTab(tab){
+  document.querySelectorAll("[data-account-tab]").forEach(button=>{
+    const active=button.dataset.accountTab===tab;
+    button.classList.toggle("is-active",active);
+    button.setAttribute("aria-selected",active?"true":"false");
+  });
+  document.querySelectorAll("[data-account-panel]").forEach(panel=>{
+    const active=panel.dataset.accountPanel===tab;
+    panel.classList.toggle("is-active",active);
+    panel.hidden=!active;
+  });
+  if(tab==="listings") loadMyListings();
+  if(tab==="profile") loadAccountProfile();
+}
+document.querySelector("#my-listings-page").addEventListener("click",event=>{
+  const tab=event.target.closest("[data-account-tab]");
+  const shortcut=event.target.closest("[data-open-account-tab]");
+  if(tab) showAccountTab(tab.dataset.accountTab);
+  if(shortcut) showAccountTab(shortcut.dataset.openAccountTab);
+});
+async function loadAccountProfile(){
+  const user=window.cardpediaSession?.user;
+  const target=document.querySelector("#account-profile-details");
+  if(!user||!target||!supabaseClient)return;
+  target.textContent="Loading your details…";
+  const [{data:address,error:addressError},{data:business}] = await Promise.all([
+    supabaseClient.from("user_addresses").select("full_name,country_code,address_line1,address_line2,postal_code,city").eq("user_id",user.id).maybeSingle(),
+    supabaseClient.from("business_profiles").select("business_name,vat_number,verification_status").eq("user_id",user.id).maybeSingle()
+  ]);
+  if(addressError){target.textContent="Could not load private address details.";return;}
+  const fields=[
+    ["Full name",address?.full_name],["Country",address?.country_code],["Address",address?.address_line1],
+    ["Apartment",address?.address_line2],["Postal code",address?.postal_code],["City",address?.city],
+    ["Business name",business?.business_name],["VAT / tax number",business?.vat_number],["Professional verification",business?.verification_status]
+  ].filter(([,value])=>value);
+  target.innerHTML=fields.length?fields.map(([label,value])=>`<div class="account-detail-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join(""):"No profile details found yet.";
+}
 function showMyListingsPage(){
   closeLayers();
   document.querySelector("body > main:not(#my-listings-page)").hidden=true;
   document.querySelector("#my-listings-page").hidden=false;
   document.querySelector("#my-listings-page").scrollIntoView({behavior:"instant",block:"start"});
-  loadMyListings();
+  const user=window.cardpediaSession?.user;
+  document.querySelector("#account-page-email").textContent=user?.email||"Manage your Cardpedia activity and personal details.";
+  document.querySelector("#account-security-email").textContent=user?.email||"";
+  const accountType=user?.user_metadata?.account_type==="professional"?"Professional seller":"Private collector";
+  document.querySelector("#account-type-pill").textContent=accountType;
+  document.querySelector("#account-welcome-title").textContent="Welcome, "+(user?.user_metadata?.username||user?.email?.split("@")[0]||"collector");
+  showAccountTab("overview");
 }
 function showMarketplacePage(){
   document.querySelector("#my-listings-page").hidden=true;
@@ -1027,6 +1070,16 @@ document.querySelector("#auth-form")?.addEventListener("submit", async (event) =
   }
 });
 
+document.querySelector("#account-signout")?.addEventListener("click", async () => {
+  const button=document.querySelector("#account-signout");
+  button.disabled=true;button.textContent="Signing out…";
+  const {error}=await supabaseClient.auth.signOut();
+  if(error){showToast("Could not sign out: "+error.message);button.disabled=false;button.textContent="Sign out";return;}
+  window.cardpediaSession=null;
+  showMarketplacePage();
+  updateAccountButton(null);
+  showToast("You have signed out.");
+});
 document.querySelector("#auth-signout")?.addEventListener("click", async () => {
   const { error } = await supabaseClient.auth.signOut();
   document.querySelector("#auth-feedback").textContent = error ? error.message : "You have signed out.";
