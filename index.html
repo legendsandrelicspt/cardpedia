@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script id="cardpedia-supabase-config" src="supabase-config.js"></script>
-    <script src="app.js?v=14" defer></script>
+    <script src="app.js?v=15" defer></script>
   </head>
   <body>
     <div class="announcement-bar"><span>THE EUROPEAN COLLECTOR'S MARKETPLACE</span><span class="announcement-note">Independent collectors · 20+ countries</span></div>
@@ -195,23 +195,25 @@
         <div class="form-row"><label>Game<select name="game" required><option value="">Choose a game</option><option>Pokémon</option><option>Magic</option><option>One Piece</option><option>Yu-Gi-Oh!</option><option>Lorcana</option><option>Riftbound</option><option>Sealed</option></select></label><label>Condition<select name="condition" required><option value="M">Mint (M)</option><option value="NM" selected>Near Mint (NM)</option><option value="EX">Excellent (EX)</option><option value="GD">Good (GD)</option><option value="LP">Lightly Played (LP)</option><option value="PL">Played (PL)</option><option value="PO">Poor (PO)</option><option value="MP">Moderately Played</option><option value="HP">Heavily Played</option><option value="DMG">Damaged</option><option value="graded">Graded</option><option value="sealed">Sealed</option></select></label></div>
         <div class="photo-requirements" id="printing-details">
           <strong>Card identification</strong>
-          <p>Select a set from the catalogue or enter the details manually if it is not listed yet.</p>
-          <div class="catalog-search">
-            <strong>Find the exact Pokémon card</strong>
-            <p>Search the Pokémon card catalogue by name. Selecting a result fills in the set, number, rarity and available finishes.</p>
-            <label>Card name<input id="pokemon-card-search" type="search" placeholder="e.g. Charizard, Pikachu, Mewtwo" autocomplete="off" /></label>
+          <p>Choose the game first. For Pokémon, search the catalogue and select the exact card. Other games can be entered manually.</p>
+          <div class="catalog-search" id="pokemon-catalog-search-wrap" hidden>
+            <strong>Pokémon catalogue</strong>
+            <label>Search card<input id="pokemon-card-search" type="search" placeholder="e.g. Charizard, Pikachu, Mewtwo" autocomplete="off" /></label>
             <div id="pokemon-card-results" class="catalog-search-results" aria-live="polite"></div>
-            <p id="pokemon-card-selection" class="catalog-selection-note">No catalogue card selected. Manual entry is still available below.</p>
+            <p id="pokemon-card-selection" class="catalog-selection-note">No card selected yet.</p>
             <input type="hidden" name="catalog_source" value="" />
             <input type="hidden" name="catalog_card_id" value="" />
           </div>
-          <label>Set / collection<select name="set_id" id="listing-set-select"><option value="">Choose a set (optional)</option><option value="manual">Set not listed — enter manually</option></select></label>
-          <label>Set / collection name<input name="set_name" id="listing-set-name" maxlength="120" placeholder="e.g. Scarlet & Violet—151" /></label>
-          <div class="form-row">
-            <label>Set code<input name="set_code" maxlength="30" placeholder="e.g. MEW" /></label>
-            <label>Card number<input name="collector_number" maxlength="30" placeholder="e.g. 199/165" /></label>
-          </div>
-          <label>Edition<select name="edition"><option value="">Not specified</option><option value="1st Edition">1st Edition</option><option value="Unlimited">Unlimited</option><option value="1st Edition Holo">1st Edition Holo</option><option value="Unlimited Holo">Unlimited Holo</option><option value="Promo">Promo</option><option value="Special Edition">Special Edition</option><option value="Limited Edition">Limited Edition</option><option value="Reverse Holo">Reverse Holo</option><option value="Holo">Holo</option><option value="Non-Holo">Non-Holo</option><option value="Other">Other</option></select></label>
+          <details class="manual-card-details">
+            <summary>Manual identification / edit card details</summary>
+            <label>Set / collection<select name="set_id" id="listing-set-select"><option value="">Choose a set (optional)</option><option value="manual">Set not listed — enter manually</option></select></label>
+            <label>Set / collection name<input name="set_name" id="listing-set-name" maxlength="120" placeholder="e.g. Scarlet & Violet—151" /></label>
+            <div class="form-row">
+              <label>Set code<input name="set_code" maxlength="30" placeholder="e.g. MEW" /></label>
+              <label>Card number<input name="collector_number" maxlength="30" placeholder="e.g. 199/165" /></label>
+            </div>
+            <label>Edition<select name="edition"><option value="">Not specified</option><option value="1st Edition">1st Edition</option><option value="Unlimited">Unlimited</option><option value="Promo">Promo</option><option value="Special Edition">Special Edition</option><option value="Limited Edition">Limited Edition</option><option value="Other">Other</option></select></label>
+          </details>
         </div>
         <div class="form-row"><label>Price (€)<input name="price" type="number" min="0.01" step="0.01" required placeholder="0.00" /></label><label>Quantity<input name="quantity" type="number" min="1" step="1" value="1" required /></label></div>
         <div class="form-row"><label>Listing type<select name="mode"><option value="buy">For sale</option><option value="trade">For trade</option><option value="both">Sale or trade</option></select></label></div>
