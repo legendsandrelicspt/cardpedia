@@ -161,6 +161,63 @@ function escapeHtml(value) {
   })[character]);
 }
 
+
+async function loadMyListings(){
+  const container=document.querySelector("#my-listings-container");
+  const feedback=document.querySelector("#my-listings-feedback");
+  if(!window.cardpediaSession?.user?.id||!supabaseClient){container.innerHTML="";return;}
+  feedback.textContent="Loading your listings…";
+  const {data,error}=await supabaseClient.from("listings")
+    .select("id,title,price_amount,currency,quantity,status,condition,finish,created_at")
+    .eq("seller_id",window.cardpediaSession.user.id).order("created_at",{ascending:false}).limit(100);
+  if(error){feedback.textContent="Could not load listings: "+error.message;return;}
+  feedback.textContent=data.length?data.length+" listing(s)":"You have not published any listings yet.";
+  container.innerHTML=(data||[]).map(item=>`
+    <article class="my-listing-row" data-my-listing="${item.id}">
+      <div class="my-listing-title"><strong>${escapeHtml(item.title)}</strong><span class="listing-status status-${escapeHtml(item.status)}">${escapeHtml(item.status)}</span></div>
+      <div class="my-listing-controls">
+        <label>Price (€)<input type="number" min="0.01" step="0.01" data-field="price_amount" value="${item.price_amount??""}" ${item.status==="sold"?"disabled":""}></label>
+        <label>Quantity<input type="number" min="1" step="1" data-field="quantity" value="${item.quantity}" ${item.status==="sold"?"disabled":""}></label>
+        <label>Status<select data-field="status" ${item.status==="sold"?"disabled":""}>
+          <option value="active" ${item.status==="active"?"selected":""}>Active — visible</option>
+          <option value="withdrawn" ${item.status==="withdrawn"?"selected":""}>Withdrawn — hidden</option>
+        </select></label>
+      </div>
+      <div class="my-listing-actions">
+        <button type="button" class="button button-primary" data-save-my-listing="${item.id}">Save changes</button>
+        <button type="button" class="button button-outline" data-delete-my-listing="${item.id}">Delete permanently</button>
+      </div>
+    </article>`).join("");
+}
+document.querySelector("#refresh-my-listings").addEventListener("click",loadMyListings);
+document.querySelector("#my-listings-container").addEventListener("click",async(event)=>{
+  const saveButton=event.target.closest("[data-save-my-listing]");
+  const deleteButton=event.target.closest("[data-delete-my-listing]");
+  if(saveButton){
+    const row=saveButton.closest("[data-my-listing]");
+    const id=saveButton.dataset.saveMyListing;
+    const price=Number(row.querySelector('[data-field="price_amount"]').value);
+    const quantity=Number(row.querySelector('[data-field="quantity"]').value);
+    const status=row.querySelector('[data-field="status"]').value;
+    if(!Number.isFinite(price)||price<=0||!Number.isInteger(quantity)||quantity<1){showToast("Enter a valid price and quantity.");return;}
+    saveButton.disabled=true;saveButton.textContent="Saving…";
+    const {error}=await supabaseClient.from("listings").update({price_amount:price,quantity,status,updated_at:new Date().toISOString()}).eq("id",id).eq("seller_id",window.cardpediaSession.user.id);
+    if(error){showToast("Could not update listing: "+error.message);saveButton.disabled=false;saveButton.textContent="Save changes";return;}
+    showToast("Listing updated.");
+    await loadMyListings();await loadMarketplaceListings();
+  }
+  if(deleteButton){
+    const id=deleteButton.dataset.deleteMyListing;
+    if(!confirm("Delete this listing permanently? This cannot be undone."))return;
+    deleteButton.disabled=true;deleteButton.textContent="Deleting…";
+    const {error}=await supabaseClient.from("listings").delete().eq("id",id).eq("seller_id",window.cardpediaSession.user.id);
+    if(error){showToast("Could not delete listing: "+error.message);deleteButton.disabled=false;deleteButton.textContent="Delete permanently";return;}
+    state.cart.delete(String(id));state.favorites.delete(String(id));saveState();
+    showToast("Listing deleted.");
+    await loadMyListings();await loadMarketplaceListings();renderCounts();renderCart();
+  }
+});
+
 const conditionToLabel = {mint:"M",near_mint:"NM",excellent:"EX",good:"GD",lightly_played:"LP",played:"PL",poor:"PO",moderately_played:"MP",heavily_played:"HP",damaged:"DMG",graded:"graded",sealed:"sealed"};
 const gameToLabel = {pokemon:"Pokémon",mtg:"Magic",onepiece:"One Piece",yugioh:"Yu-Gi-Oh!",lorcana:"Lorcana",riftbound:"Riftbound",sealed:"Sealed"};
 async function loadMarketplaceListings() {
@@ -820,12 +877,15 @@ async function openAuthModal() {
     const { data: profile } = await supabaseClient.from("profiles").select("username").eq("id", accountUser.id).maybeSingle();
     const username = profile?.username || accountUser.user_metadata?.username || accountUser.email?.split("@")[0] || "collector";
     document.querySelector("#account-username").textContent = "@" + username;
+    document.querySelector("#my-listings-section").hidden = false;
+    loadMyListings();
     document.querySelector("#account-identity").hidden = false;
     document.querySelector("#auth-form").hidden = true;
     document.querySelector("#auth-switch").hidden = true;
     document.querySelector("#auth-signout").hidden = false;
   } else {
     document.querySelector("#account-identity").hidden = true;
+    document.querySelector("#my-listings-section").hidden = true;
     document.querySelector("#auth-form").hidden = false;
     document.querySelector("#auth-switch").hidden = false;
   }
