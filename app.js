@@ -407,6 +407,35 @@ function openListingModal() {
 const listingForm = document.querySelector("#listing-form");
 const listingFeedback = document.querySelector("#listing-form-feedback");
 const listingSubmit = document.querySelector("#listing-submit");
+const setSelect = listingForm.querySelector("#listing-set-select");
+const setNameInput = listingForm.querySelector("#listing-set-name");
+const setCodeInput = listingForm.querySelector("[name='set_code']");
+const collectorNumberInput = listingForm.querySelector("[name='collector_number']");
+const editionInput = listingForm.querySelector("[name='edition']");
+const gameSelect = listingForm.querySelector("[name='game']");
+let availableSets = [];
+async function loadSetsForGame() {
+  setSelect.innerHTML = '<option value="">Choose a set (optional)</option><option value="manual">Set not listed — enter manually</option>';
+  availableSets = [];
+  if (!supabaseClient || !gameSelect.value) return;
+  const gameIds = {"Pokémon":"pokemon","Magic":"mtg","One Piece":"onepiece","Yu-Gi-Oh!":"yugioh","Lorcana":"lorcana","Riftbound":"riftbound","Sealed":"sealed"};
+  const {data,error} = await supabaseClient.from("card_sets").select("id,name,code").eq("game_id",gameIds[gameSelect.value]).order("name").limit(500);
+  if(error){ console.warn("Cardpedia: could not load set catalogue.",error.message); return; }
+  availableSets = data || [];
+  for (const set of availableSets) {
+    const option=document.createElement("option");
+    option.value=set.id;
+    option.textContent=set.code ? set.name+" ("+set.code+")" : set.name;
+    setSelect.append(option);
+  }
+}
+gameSelect.addEventListener("change",loadSetsForGame);
+setSelect.addEventListener("change",()=>{
+  const selected=availableSets.find(set=>set.id===setSelect.value);
+  if(selected){setNameInput.value=selected.name;setCodeInput.value=selected.code||"";}
+  else if(setSelect.value==="manual"){setNameInput.focus();}
+});
+loadSetsForGame();
 const defectCheckbox = listingForm.querySelector("[name='has_defects']");
 const conditionInput = listingForm.querySelector("[name='condition']");
 const priceInput = listingForm.querySelector("[name='price']");
@@ -506,6 +535,11 @@ listingForm.addEventListener("submit", async (event) => {
     const { data: draft, error: draftError } = await supabaseClient.from("listings").insert({
       seller_id: session.user.id,
       game_id: gameNames[form.get("game")],
+      set_id: form.get("set_id") && form.get("set_id") !== "manual" ? form.get("set_id") : null,
+      set_name: String(form.get("set_name") || "").trim() || null,
+      set_code: String(form.get("set_code") || "").trim() || null,
+      collector_number: String(form.get("collector_number") || "").trim() || null,
+      edition: String(form.get("edition") || "").trim() || null,
       title: String(form.get("name")).trim(),
       description: String(form.get("notes") || "").trim(),
       listing_type: modeMap[form.get("mode")],
