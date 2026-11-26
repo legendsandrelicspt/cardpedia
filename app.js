@@ -432,8 +432,16 @@ document.addEventListener("click", (event) => {
   const categoryButton = event.target.closest("[data-category]");
   if (categoryButton) {
     state.category = categoryButton.dataset.category;
-    document.querySelectorAll(".category-chip").forEach((button) => button.classList.toggle("selected", button === categoryButton));
+    document.querySelectorAll(".category-chip").forEach((button) => button.classList.toggle("selected", button.dataset.category === state.category));
     renderListings();
+  }
+
+  const heroGameButton = event.target.closest(".hero-game-link, .hero-all-games");
+  if (heroGameButton) {
+    state.category = heroGameButton.dataset.category;
+    document.querySelectorAll(".category-chip").forEach((button) => button.classList.toggle("selected", button.dataset.category === state.category));
+    renderListings();
+    document.querySelector("#mercado").scrollIntoView({behavior:"smooth",block:"start"});
   }
 
   const modeButton = event.target.closest("[data-mode]");
