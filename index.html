@@ -206,6 +206,10 @@
     <section class="modal auth-modal" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title" hidden>
       <div class="modal-header"><div><span class="section-kicker">Your Cardpedia account</span><h2 id="auth-title">Welcome back</h2></div><button class="close-button" data-close aria-label="Close dialog">×</button></div>
       <p class="modal-intro" id="auth-description">Sign in to manage your collection and listings.</p>
+      <div class="account-identity" id="account-identity" hidden>
+        <span class="account-identity-label">Username</span>
+        <strong id="account-username"></strong>
+      </div>
       <form id="auth-form">
         <label id="auth-name-wrap" hidden>Display name<input name="display_name" maxlength="40" autocomplete="name" placeholder="Your collector name" /></label>
         <label>Email address<input name="email" type="email" required autocomplete="email" maxlength="254" placeholder="you@example.com" /></label>
