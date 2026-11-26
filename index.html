@@ -39,6 +39,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.7c0 4.1-8.8 10-8.8 10s-8.8-5.9-8.8-10a4.8 4.8 0 0 1 8.8-2.6 4.8 4.8 0 0 1 8.8 2.6Z" /></svg>
           <span class="favorites-count" id="favorites-count">0</span>
         </button>
+        <button class="button button-outline" id="account-button" type="button">Account</button>
         <button class="button button-outline sell-button" id="sell-button">Sell or trade</button>
         <button class="icon-button cart-button" id="cart-button" aria-label="Open basket">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.1a2 2 0 0 0 2 1.6h8.5a2 2 0 0 0 1.9-1.4L21 8H6" /><circle cx="10" cy="20" r="1" /><circle cx="18" cy="20" r="1" /></svg>
@@ -202,6 +203,19 @@
       <div id="transaction-content"></div>
     </section>
 
+    <section class="modal auth-modal" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title" hidden>
+      <div class="modal-header"><div><span class="section-kicker">Your Cardpedia account</span><h2 id="auth-title">Welcome back</h2></div><button class="close-button" data-close aria-label="Close dialog">×</button></div>
+      <p class="modal-intro" id="auth-description">Sign in to manage your collection and listings.</p>
+      <form id="auth-form">
+        <label id="auth-name-wrap" hidden>Display name<input name="display_name" maxlength="40" autocomplete="name" placeholder="Your collector name" /></label>
+        <label>Email address<input name="email" type="email" required autocomplete="email" maxlength="254" placeholder="you@example.com" /></label>
+        <label>Password<input name="password" type="password" required minlength="12" autocomplete="current-password" placeholder="At least 12 characters" /></label>
+        <button class="button button-primary modal-submit" id="auth-submit" type="submit">Sign in <span>→</span></button>
+      </form>
+      <p class="auth-switch" id="auth-switch">New to Cardpedia? <button type="button" id="auth-toggle">Create an account</button></p>
+      <p class="auth-feedback" id="auth-feedback" role="status" aria-live="polite"></p>
+      <button class="text-button auth-signout" id="auth-signout" type="button" hidden>Sign out</button>
+    </section>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </body>
 </html>
