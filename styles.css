@@ -581,3 +581,14 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 #auth-modal [hidden] { display: none !important; }
 
 #auth-modal [name="username"] { text-transform: none; }
+
+.photo-requirements { display:grid; gap:12px; padding:15px; border:1px solid var(--line); border-radius:8px; background:#f7f8fb; }
+.photo-requirements > strong { font-size:13px; }
+.photo-requirements > p { margin:-6px 0 2px; color:var(--muted); font-size:12px; line-height:1.5; }
+.photo-requirements label { display:grid; gap:7px; font-size:12px; font-weight:600; }
+.photo-requirements input[type=file] { width:100%; font-size:11px; }
+.photo-requirements .defect-check { display:flex; align-items:center; gap:9px; }
+.photo-requirements .defect-check input { width:auto; }
+.listing-form-feedback { min-height:18px; color:#a33b32; font-size:12px; }
+#listing-submit:disabled { opacity:.55; cursor:wait; }
+#listing-modal [hidden] { display:none !important; }
