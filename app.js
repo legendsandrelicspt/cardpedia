@@ -421,10 +421,12 @@ function resetFilters() {
   state.category = "all";
   state.mode = "all";
   state.condition = "all";
+  state.finish = "all";
   state.maxPrice = 500;
   state.favoritesOnly = false;
   document.querySelector("#search-input").value = "";
   document.querySelector("#condition-filter").value = "all";
+  document.querySelector("#finish-filter").value = "all";
   document.querySelector("#price-filter").value = "500";
   document.querySelector("#price-filter-value").textContent = "€500";
   document.querySelectorAll(".category-chip").forEach((button) => button.classList.toggle("selected", button.dataset.category === "all"));
