@@ -485,7 +485,7 @@ function setAuthMode(mode) {
     ? "Join Cardpedia to manage your collection and publish listings."
     : "Sign in to manage your collection and listings.";
   document.querySelector("#auth-name-wrap").hidden = !signup;
-  document.querySelector("#auth-form [name='display_name']").required = signup;
+  document.querySelector("#auth-form [name='username']").required = signup;
   document.querySelector("#auth-form [name='password']").autocomplete = signup ? "new-password" : "current-password";
   document.querySelector("#auth-submit").innerHTML = signup ? "Create account <span>→</span>" : "Sign in <span>→</span>";
   document.querySelector("#auth-switch").innerHTML = signup
@@ -503,8 +503,9 @@ function openAuthModal() {
     document.querySelector("#auth-title").textContent = "Your account";
     document.querySelector("#auth-description").textContent = window.cardpediaSession.user.email;
     const accountUser = window.cardpediaSession.user;
-    const username = accountUser.user_metadata?.display_name || accountUser.email?.split("@")[0] || "Collector";
-    document.querySelector("#account-username").textContent = username.startsWith("@") ? username : "@" + username.replace(/\\s+/g, "");
+    const { data: profile } = await supabaseClient.from("profiles").select("username").eq("id", accountUser.id).maybeSingle();
+    const username = profile?.username || accountUser.user_metadata?.username || accountUser.email?.split("@")[0] || "collector";
+    document.querySelector("#account-username").textContent = "@" + username;
     document.querySelector("#account-identity").hidden = false;
     document.querySelector("#auth-form").hidden = true;
     document.querySelector("#auth-switch").hidden = true;
@@ -535,11 +536,12 @@ document.querySelector("#auth-form")?.addEventListener("submit", async (event) =
   try {
     let result;
     if (authMode === "signup") {
-      const displayName = String(form.get("display_name")).trim();
+      const username = String(form.get("username")).trim().replace(/^@/, "");
+      if (!/^[A-Za-z0-9_]{3,24}$/.test(username)) { feedback.textContent = "Username must be 3–24 characters and use only letters, numbers or underscores."; submit.disabled = false; return; }
       result = await supabaseClient.auth.signUp({
         email, password,
         options: {
-          data: { display_name: displayName },
+          data: { username },
           emailRedirectTo: "https://legendsandrelicspt.github.io/cardpedia/"
         }
       });
@@ -583,7 +585,8 @@ if (supabaseClient) {
     if (session?.user) {
       supabaseClient.from("profiles").upsert({
         id: session.user.id,
-        display_name: session.user.user_metadata?.display_name || session.user.email?.split("@")[0]
+        username: session.user.user_metadata?.username || session.user.email?.split("@")[0]?.replace(/[^A-Za-z0-9_]/g, "").slice(0, 24) || "collector",
+        display_name: session.user.user_metadata?.username || session.user.email?.split("@")[0]
       }, { onConflict: "id" }).then(({ error }) => {
         if (error) console.warn("Cardpedia: profile sync could not be completed.", error.message);
       });
