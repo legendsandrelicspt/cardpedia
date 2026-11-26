@@ -1,4 +1,5 @@
 -- Cardpedia listing photo requirements and database-side publication checks.
+-- Keep the bucket private: public buckets expose every object, including draft photos.
 alter table public.listings
   add column if not exists rarity text not null default 'unknown',
   add column if not exists has_defects boolean not null default false;
@@ -9,12 +10,24 @@ alter table public.listing_images
 
 grant insert, update on public.listings to authenticated;
 grant select, insert, delete on public.listing_images to authenticated;
-grant select on storage.objects to anon, authenticated;
-grant insert, update, delete on storage.objects to authenticated;
+grant select, insert, update, delete on storage.objects to authenticated;
 
--- Listing images are seller-uploaded photographs, not publisher artwork.
--- Public read is enabled so buyers can view photos of active listings.
-update storage.buckets set public = true where id = 'Cardpedia-listings';
+-- Do not make Cardpedia-listings public. Owners can read their own private uploads.
+drop policy if exists "Cardpedia sellers read own listing images" on storage.objects;
+create policy "Cardpedia sellers read own listing images"
+on storage.objects
+for select
+to authenticated
+using (
+  bucket_id = 'Cardpedia-listings'
+  and (storage.foldername(name))[1] = auth.uid()::text
+  and exists (
+    select 1
+    from public.listings l
+    where l.id::text = (storage.foldername(name))[2]
+      and l.seller_id = auth.uid()
+  )
+);
 
 create or replace function public.cardpedia_validate_listing_publication()
 returns trigger
@@ -32,7 +45,7 @@ begin
     select
       count(*) filter (where image_type = 'front'),
       count(*) filter (where image_type = 'back'),
-      count(*) filter (where image_type in ('detail','defect')),
+      count(*) filter (where image_type = 'detail'),
       count(*) filter (where image_type = 'defect')
     into front_count, back_count, detail_count, defect_count
     from public.listing_images
@@ -42,7 +55,12 @@ begin
       raise exception 'A listing needs at least one front and one back photo.';
     end if;
 
-    if lower(coalesce(new.rarity, 'unknown')) in ('rare','double rare','ultra rare','illustration rare','special illustration rare','hyper rare','secret rare','mythic rare','rare mythic','rare ultra','rare secret','manga rare','leader rare','enchanted','legendary','epic','showcase') and detail_count < 2 then
+    if lower(coalesce(new.rarity, 'unknown')) in (
+      'rare','double rare','ultra rare','illustration rare',
+      'special illustration rare','hyper rare','secret rare',
+      'mythic rare','rare mythic','rare ultra','rare secret',
+      'manga rare','leader rare','enchanted','legendary','epic','showcase'
+    ) and detail_count < 2 then
       raise exception 'Rare and higher cards need at least two additional detail photos.';
     end if;
 
