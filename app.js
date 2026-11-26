@@ -994,6 +994,25 @@ function showMarketplacePage(){
   document.querySelector("body > main:not(#my-listings-page)").hidden=false;
   window.scrollTo({top:0,behavior:"smooth"});
 }
+
+// Header navigation: always return to the marketplace before scrolling to a section.
+document.querySelector(".brand")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  showMarketplacePage();
+  document.querySelectorAll(".main-nav .nav-link").forEach((link) => link.classList.remove("active"));
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+
+document.querySelectorAll(".main-nav .nav-link").forEach((link) => {
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    const target = document.querySelector(link.getAttribute("href"));
+    if (!target) return;
+    showMarketplacePage();
+    document.querySelectorAll(".main-nav .nav-link").forEach((item) => item.classList.toggle("active", item === link));
+    requestAnimationFrame(() => target.scrollIntoView({behavior:"smooth",block:"start"}));
+  });
+});
 document.querySelector("#auth-form [name='account_type']")?.closest("#signup-profile-fields")?.addEventListener("change", (event) => {
   if (event.target.name === "account_type") {
     document.querySelector("#professional-fields").hidden = event.target.value !== "professional";
