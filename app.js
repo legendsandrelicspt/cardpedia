@@ -413,21 +413,38 @@ const priceInput = listingForm.querySelector("[name='price']");
 const frontInput = listingForm.querySelector("[name='photo_front']");
 const backInput = listingForm.querySelector("[name='photo_back']");
 const defectPhotosInput = listingForm.querySelector("[name='photo_defects']");
+const gradingDetailsWrap = document.querySelector("#grading-details-wrap");
+const gradingCompanyInput = listingForm.querySelector("[name='grading_company']");
+const gradingGradeInput = listingForm.querySelector("[name='grading_grade']");
+const gradingLabelInput = listingForm.querySelector("[name='photo_grading_label']");
 function updatePhotoRequirements() {
   const condition = conditionInput.value;
   const price = Number(priceInput.value);
   const eligibleCondition = condition === "M" || condition === "NM";
+  const isGraded = condition === "graded";
   const frontBackRequired = eligibleCondition && Number.isFinite(price) && price > 5;
+  gradingDetailsWrap.hidden = !isGraded;
+  gradingCompanyInput.required = isGraded;
+  gradingGradeInput.required = isGraded;
+  gradingLabelInput.required = isGraded;
+  if (!isGraded) {
+    gradingCompanyInput.value = "";
+    gradingGradeInput.value = "";
+    listingForm.querySelector("[name='grading_certification_number']").value = "";
+    gradingLabelInput.value = "";
+  }
   frontInput.required = frontBackRequired;
   backInput.required = frontBackRequired;
   defectPhotosInput.required = eligibleCondition && defectCheckbox.checked;
   document.querySelector("#defect-photos-wrap").hidden = !defectCheckbox.checked;
   const notice = document.querySelector("#photo-rule-notice");
-  notice.textContent = eligibleCondition
-    ? (frontBackRequired
-      ? "For M / NM cards priced above €5, front and back photos are mandatory. If you report imperfections, add photos showing them."
-      : "For M / NM cards priced at €5 or less, photos are optional. If you report imperfections, add photos showing them.")
-    : "Photos are optional for this condition. You can still add them to show the item's actual state.";
+  notice.textContent = isGraded
+    ? "Graded items require a front photo and a clear photo of the grading label. A back photo is recommended."
+    : eligibleCondition
+      ? (frontBackRequired
+        ? "For M / NM cards priced above €5, front and back photos are mandatory. If you report imperfections, add photos showing them."
+        : "For M / NM cards priced at €5 or less, photos are optional. If you report imperfections, add photos showing them.")
+      : "Photos are optional for this condition. You can still add them to show the item's actual state.";
 }
 [conditionInput, priceInput, defectCheckbox].forEach((input) => input.addEventListener("input", updatePhotoRequirements));
 defectCheckbox.addEventListener("change", updatePhotoRequirements);
@@ -446,19 +463,25 @@ listingForm.addEventListener("submit", async (event) => {
   const form = new FormData(listingForm);
   const front = form.get("photo_front");
   const back = form.get("photo_back");
+  const gradingLabel = form.get("photo_grading_label");
   const details = [...listingForm.querySelector("[name='photo_details']").files];
   const defects = [...listingForm.querySelector("[name='photo_defects']").files];
   const rarity = String(form.get("rarity"));
   const condition = String(form.get("condition"));
+  const isGraded = condition === "graded";
   const eligibleCondition = condition === "M" || condition === "NM";
   const frontBackRequired = eligibleCondition && Number(form.get("price")) > 5;
   const validOptionalPhoto = (file) => !file || file.size === 0 || validPhoto(file);
-  if (!validOptionalPhoto(front) || !validOptionalPhoto(back) || details.some(file => !validPhoto(file)) || defects.some(file => !validPhoto(file))) {
+  if (!validOptionalPhoto(front) || !validOptionalPhoto(back) || !validOptionalPhoto(gradingLabel) || details.some(file => !validPhoto(file)) || defects.some(file => !validPhoto(file))) {
     listingFeedback.textContent = "Use JPG, PNG or WebP photos, each up to 8 MB.";
     return;
   }
   if (frontBackRequired && (!validPhoto(front) || !validPhoto(back))) {
     listingFeedback.textContent = "Cards in M / NM condition priced above €5 require front and back photos.";
+    return;
+  }
+  if (isGraded && (!String(form.get("grading_company") || "").trim() || !String(form.get("grading_grade") || "").trim() || !validPhoto(front) || !validPhoto(gradingLabel))) {
+    listingFeedback.textContent = "Graded listings require a grading company, grade, front photo and grading-label photo.";
     return;
   }
   if (eligibleCondition && defectCheckbox.checked && defects.length === 0) {
@@ -489,6 +512,9 @@ listingForm.addEventListener("submit", async (event) => {
       condition: conditionMap[form.get("condition")],
       language: form.get("language"),
       rarity,
+      grading_company: isGraded ? String(form.get("grading_company")).trim() : null,
+      grading_grade: isGraded ? String(form.get("grading_grade")).trim() : null,
+      grading_certification_number: isGraded ? (String(form.get("grading_certification_number") || "").trim() || null) : null,
       has_defects: defectCheckbox.checked,
       price_amount: Number(form.get("price")),
       quantity: Number(form.get("quantity")),
@@ -499,6 +525,7 @@ listingForm.addEventListener("submit", async (event) => {
     const uploads = [
       ...(front && front.size ? [{file:front,type:"front"}] : []),
       ...(back && back.size ? [{file:back,type:"back"}] : []),
+      ...(gradingLabel && gradingLabel.size ? [{file:gradingLabel,type:"grading_label"}] : []),
       ...details.map(file=>({file,type:"detail"})),
       ...defects.map(file=>({file,type:"defect"}))
     ];
