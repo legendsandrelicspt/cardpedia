@@ -638,3 +638,8 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .my-listing-actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
 .my-listing-actions .button { padding:8px 11px; font-size:11px; }
 @media(min-width:600px){.my-listing-controls{grid-template-columns:1fr 1fr 1.2fr;}}
+
+/* Seller-uploaded card photos replace every catalogue placeholder layer. */
+.product-visual.has-photo .catalogue-card-placeholder,
+.product-visual.has-photo .product-art { display: none !important; }
+.product-visual.has-photo .listing-product-photo { z-index: 2; }
