@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script id="cardpedia-supabase-config" src="supabase-config.js"></script>
-    <script src="app.js?v=15" defer></script>
+    <script src="app.js?v=16" defer></script>
   </head>
   <body>
     <div class="announcement-bar"><span>THE EUROPEAN COLLECTOR'S MARKETPLACE</span><span class="announcement-note">Independent collectors · 20+ countries</span></div>
@@ -253,6 +253,11 @@
       <div class="account-identity" id="account-identity" hidden>
         <strong id="account-username"></strong>
       </div>
+      <section class="my-listings-section" id="my-listings-section" hidden>
+        <div class="my-listings-heading"><div><h3>My listings</h3><p>Manage your published cards and offers.</p></div><button type="button" class="text-button" id="refresh-my-listings">Refresh</button></div>
+        <div id="my-listings-feedback" role="status" aria-live="polite"></div>
+        <div id="my-listings-container"></div>
+      </section>
       <form id="auth-form">
         <label id="auth-name-wrap" hidden>Username<input name="username" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" autocomplete="username" placeholder="e.g. cardcollector92" /></label>
         <label>Email address<input name="email" type="email" required autocomplete="email" maxlength="254" placeholder="you@example.com" /></label>
