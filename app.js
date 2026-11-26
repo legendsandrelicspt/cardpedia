@@ -536,11 +536,6 @@ const pokemonCardResults = listingForm.querySelector("#pokemon-card-results");
 const pokemonCardSelection = listingForm.querySelector("#pokemon-card-selection");
 const pokemonCatalogPreview=listingForm.querySelector("#pokemon-catalog-preview");
 const pokemonCatalogImage=listingForm.querySelector("#pokemon-catalog-image");
-const pokemonScanInput=listingForm.querySelector("#pokemon-scan-input");
-const pokemonScanPreview=listingForm.querySelector("#pokemon-scan-preview");
-const pokemonScanImage=listingForm.querySelector("#pokemon-scan-image");
-const pokemonScanStatus=listingForm.querySelector("#pokemon-scan-status");
-let pokemonScanObjectUrl=null;
 let pokemonSearchTimer = null;
 let pokemonSearchRequest = 0;
 async function searchPokemonCatalog(term) {
@@ -583,50 +578,6 @@ async function searchPokemonCatalog(term) {
     console.warn("Cardpedia: Pokémon catalogue search failed.",error);
   }
 }
-pokemonScanInput.addEventListener("change",()=>{const file=pokemonScanInput.files && pokemonScanInput.files[0];if(!file)return;if(!file.type.startsWith("image/")||file.size>12582912){pokemonScanStatus.textContent="Choose an image smaller than 12 MB.";pokemonScanInput.value="";return;}if(pokemonScanObjectUrl)URL.revokeObjectURL(pokemonScanObjectUrl);pokemonScanObjectUrl=URL.createObjectURL(file);pokemonScanImage.src=pokemonScanObjectUrl;pokemonScanPreview.hidden=false;pokemonScanStatus.textContent="Photo ready. Select Identify card to scan it.";});
-document.querySelector("#pokemon-scan-identify").addEventListener("click",async()=>{
-  const file=pokemonScanInput.files&&pokemonScanInput.files[0];
-  if(!file){pokemonScanStatus.textContent="Take or choose a photo first.";return;}
-  if(!supabaseClient||!window.cardpediaSession?.user){pokemonScanStatus.textContent="Sign in to use card identification.";return;}
-  const button=document.querySelector("#pokemon-scan-identify");
-  button.disabled=true;button.textContent="Identifying…";pokemonScanStatus.textContent="Sending photo securely for identification…";
-  try{
-    const body=new FormData();body.append("image",file,file.name||"card-photo.jpg");
-    const {data,error}=await supabaseClient.functions.invoke("identify-pokemon",{body});
-    if(error)throw error;
-    const detections=data?.detections||[];
-    if(!data?.success||detections.length===0)throw new Error("No card was identified. Try a sharper photo with one card filling the frame.");
-    if(detections.length!==1)throw new Error("More than one card was detected. Retake the photo with only one card visible.");
-    const detection=detections[0],card=detection.card||{};
-    if(!card.name)throw new Error("The Pokémon was detected, but no card name was returned. Try catalogue search.");
-    const confidence=String(detection.confidence||"").toLowerCase();
-    listingForm.querySelector("[name='name']").value=card.name;
-    setNameInput.value="";
-    setCodeInput.value="";
-    collectorNumberInput.value="";
-    listingForm.querySelector("[name='catalog_source']").value="";
-    listingForm.querySelector("[name='catalog_card_id']").value="";
-    listingForm.querySelector("[name='catalog_image_url']").value="";
-    if(confidence==="high"&&card.id){
-      setNameInput.value=card.setName||card.releaseName||"";
-      collectorNumberInput.value=card.number||"";
-      listingForm.querySelector("[name='catalog_source']").value="cardsight";
-      listingForm.querySelector("[name='catalog_card_id']").value=card.id;
-      pokemonCardSelection.textContent="Possible match: "+card.name+" · "+(card.setName||card.releaseName||"Set unknown")+" · "+(card.number||"Number unknown")+" · High confidence. Verify edition and printing before publishing.";
-      pokemonScanStatus.textContent="High-confidence candidate found. Verify the exact edition and printing.";
-    }else{
-      pokemonCardSelection.textContent="Pokémon detected: "+card.name+" · "+(detection.confidence||"Confidence unavailable")+". Exact set, number and edition need confirmation below.";
-      pokemonScanStatus.textContent="Pokémon recognized. Comparing catalogue printings — select the exact artwork, set and edition.";
-      pokemonCardSearch.value=card.name;
-      manualCardDetails.open=true;
-      await searchPokemonCatalog(card.name);
-    }
-  }catch(error){
-    console.error("Cardpedia: photo identification failed.",error);
-    pokemonScanStatus.textContent=error.message||"Identification failed. Please try again.";
-  }finally{button.disabled=false;button.textContent="Identify card";}
-});
-document.querySelector("#pokemon-scan-clear").addEventListener("click",()=>{pokemonScanInput.value="";pokemonScanPreview.hidden=true;if(pokemonScanObjectUrl)URL.revokeObjectURL(pokemonScanObjectUrl);pokemonScanObjectUrl=null;pokemonScanStatus.textContent="Photo preview only — choose a photo to begin.";});
 pokemonCardSearch.addEventListener("input",()=>{
   clearTimeout(pokemonSearchTimer);
   const term=pokemonCardSearch.value.trim();
