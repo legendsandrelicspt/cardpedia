@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script id="cardpedia-supabase-config" src="supabase-config.js"></script>
-    <script src="app.js?v=10" defer></script>
+    <script src="app.js?v=11" defer></script>
   </head>
   <body>
     <div class="announcement-bar"><span>THE EUROPEAN COLLECTOR'S MARKETPLACE</span><span class="announcement-note">Independent collectors · 20+ countries</span></div>
@@ -121,6 +121,7 @@
         </div>
 
         <div class="filters-panel" id="filters-panel" hidden>
+          <label>Finish<select id="finish-filter"><option value="all">Any finish</option><option value="non_holo">Non-Holo</option><option value="holofoil">Holofoil</option><option value="reverse">Reverse Holo</option></select></label>
           <label>Condition<select id="condition-filter"><option value="all">Any condition</option><option value="M">Mint</option><option value="NM">Near Mint</option><option value="EX">Excellent</option><option value="GD">Good</option><option value="LP">Lightly Played</option><option value="PL">Played</option><option value="PO">Poor</option><option value="MP">Moderately Played</option><option value="HP">Heavily Played</option><option value="DMG">Damaged</option><option value="graded">Graded</option><option value="sealed">Sealed</option></select></label>
           <label>Maximum price <span class="price-filter-value" id="price-filter-value">€500</span><input id="price-filter" type="range" min="5" max="500" step="5" value="500" /></label>
           <button class="clear-filters" id="clear-filters">Clear filters</button>
@@ -206,6 +207,7 @@
         <div class="form-row"><label>Price (€)<input name="price" type="number" min="0.01" step="0.01" required placeholder="0.00" /></label><label>Quantity<input name="quantity" type="number" min="1" step="1" value="1" required /></label></div>
         <div class="form-row"><label>Listing type<select name="mode"><option value="buy">For sale</option><option value="trade">For trade</option><option value="both">Sale or trade</option></select></label></div>
         <div class="form-row"><label>Rarity<select name="rarity" required><option value="unknown">Not specified / sealed</option><option value="common">Common</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="double rare">Double Rare</option><option value="ultra rare">Ultra Rare</option><option value="illustration rare">Illustration Rare</option><option value="special illustration rare">Special Illustration Rare</option><option value="secret rare">Secret Rare</option><option value="mythic rare">Mythic Rare</option><option value="manga rare">Manga Rare</option><option value="enchanted">Enchanted</option><option value="other">Other / not listed</option></select></label><label>Language<select name="language"><option value="English">English</option><option value="Portuguese">Portuguese</option><option value="Japanese">Japanese</option><option value="French">French</option><option value="German">German</option><option value="Italian">Italian</option><option value="Spanish">Spanish</option><option value="Other">Other</option></select></label></div>
+        <label>Finish<select name="finish"><option value="non_holo">Non-Holo</option><option value="holofoil">Holofoil</option><option value="reverse">Reverse Holo</option><option value="other">Other / special foil</option></select></label>
         <div class="photo-requirements grading-details" id="grading-details-wrap" hidden>
           <strong>Grading details</strong>
           <p>Enter the information exactly as it appears on the grading label.</p>
