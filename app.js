@@ -124,13 +124,13 @@ function visibleListings() {
 }
 
 function productMarkup(item) {
-  const favorite = state.favorites.has(item.id);
+  const favorite = state.favorites.has(String(item.id));
   const conditionLabels = {M:"Mint",NM:"Near Mint",EX:"Excellent",GD:"Good",LP:"Lightly Played",PL:"Played",PO:"Poor",MP:"Moderately Played",HP:"Heavily Played",DMG:"Damaged",graded:"Graded",sealed:"Sealed"};
   const conditionLabel = conditionLabels[item.condition] || item.condition;
   const gameClass = item.game === "Yu-Gi-Oh!" ? "yu-gi-oh" : item.game.toLowerCase().replace(/[^a-z]+/g, "-");
   return `
     <article class="product-card">
-      <div class="product-visual ${item.visual}">${item.imageUrl ? `<img class="listing-product-photo" src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" />` : ""}
+      <div class="product-visual ${item.visual} ${item.imageUrl ? "has-photo" : ""}">${item.imageUrl ? `<img class="listing-product-photo" src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" />` : ""}
         <span class="product-badge">${escapeHtml(item.badge)}</span>
         <button class="favorite-button ${favorite ? "is-favorite" : ""}" data-favorite="${item.id}" aria-label="${favorite ? "Remove from favourites" : "Add to favourites"}">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.7c0 4.1-8.8 10-8.8 10s-8.8-5.9-8.8-10a4.8 4.8 0 0 1 8.8-2.6 4.8 4.8 0 0 1 8.8 2.6Z" /></svg>
