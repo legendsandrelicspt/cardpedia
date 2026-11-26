@@ -565,3 +565,14 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 @media (prefers-reduced-motion: no-preference) {
   .product-card, .button, .category-chip, .add-cart { transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease; }
 }
+
+/* Cardpedia account access */
+.auth-modal { z-index: 6; }
+.auth-modal form { display: grid; gap: 14px; }
+.auth-modal label { display: grid; gap: 7px; color: var(--ink); font-size: 12px; font-weight: 600; }
+.auth-modal input { width: 100%; min-height: 43px; border: 1px solid var(--line); border-radius: 5px; padding: 10px 12px; background: white; color: var(--ink); }
+.auth-switch { margin: 18px 0 0; color: var(--muted); font-size: 12px; }
+.auth-switch button { border: 0; padding: 0; background: none; color: var(--ink); text-decoration: underline; cursor: pointer; font-weight: 700; }
+.auth-feedback { min-height: 18px; margin: 12px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.auth-signout { color: var(--ink); margin-top: 8px; }
+#auth-submit:disabled { opacity: .6; cursor: wait; }
