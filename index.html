@@ -193,8 +193,17 @@
         <label>Item name<input name="name" required maxlength="70" placeholder="e.g. Charizard ex — 199/165" /></label>
         <div class="form-row"><label>Game<select name="game" required><option value="">Choose a game</option><option>Pokémon</option><option>Magic</option><option>One Piece</option><option>Yu-Gi-Oh!</option><option>Sealed</option></select></label><label>Condition<select name="condition" required><option value="NM">Near Mint</option><option value="LP">Lightly Played</option><option value="sealed">Sealed</option></select></label></div>
         <div class="form-row"><label>Price (€)<input name="price" type="number" min="0.01" step="0.01" required placeholder="0.00" /></label><label>Listing type<select name="mode"><option value="buy">For sale</option><option value="trade">For trade</option><option value="both">Sale or trade</option></select></label></div>
-        <label>Collector notes<textarea name="notes" rows="3" maxlength="180" placeholder="Language, edition, what you’re looking for..."></textarea></label>
-        <button class="button button-primary modal-submit" type="submit">Publish listing <span>→</span></button>
+        <div class="form-row"><label>Rarity<select name="rarity" required><option value="unknown">Not specified / sealed</option><option value="common">Common</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="double rare">Double Rare</option><option value="ultra rare">Ultra Rare</option><option value="illustration rare">Illustration Rare</option><option value="special illustration rare">Special Illustration Rare</option><option value="secret rare">Secret Rare</option><option value="mythic rare">Mythic Rare</option><option value="manga rare">Manga Rare</option><option value="enchanted">Enchanted</option><option value="other">Other / not listed</option></select></label><label>Language<select name="language"><option value="English">English</option><option value="Portuguese">Portuguese</option><option value="Japanese">Japanese</option><option value="French">French</option><option value="German">German</option><option value="Italian">Italian</option><option value="Spanish">Spanish</option><option value="Other">Other</option></select></label></div>
+        <div class="photo-requirements"><strong>Required product photos</strong><p>Upload clear photos of the actual item. Front and back are mandatory. Rare and higher cards require at least two additional detail photos.</p>
+          <label>Front photo<input name="photo_front" type="file" accept="image/jpeg,image/png,image/webp" required /></label>
+          <label>Back photo<input name="photo_back" type="file" accept="image/jpeg,image/png,image/webp" required /></label>
+          <label>Detail photos (2 minimum for Rare and above)<input name="photo_details" type="file" accept="image/jpeg,image/png,image/webp" multiple /></label>
+          <label class="defect-check"><input name="has_defects" type="checkbox" /> This item has damage or imperfections</label>
+          <label id="defect-photos-wrap" hidden>Photos showing every reported damage / imperfection<input name="photo_defects" type="file" accept="image/jpeg,image/png,image/webp" multiple /></label>
+        </div>
+        <label>Collector notes<textarea name="notes" rows="3" maxlength="180" placeholder="Edition, language details, defects and what you’re looking for..."></textarea></label>
+        <p class="listing-form-feedback" id="listing-form-feedback" role="status" aria-live="polite"></p>
+        <button class="button button-primary modal-submit" id="listing-submit" type="submit">Publish listing <span>→</span></button>
       </form>
     </section>
 
