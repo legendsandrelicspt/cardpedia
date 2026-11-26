@@ -545,15 +545,39 @@ let pokemonSearchTimer = null;
 let pokemonSearchRequest = 0;
 async function searchPokemonCatalog(term) {
   const requestId=++pokemonSearchRequest;
-  pokemonCardResults.innerHTML='<p class="catalog-search-status">Searching Pokémon catalogue…</p>';
+  pokemonCardResults.innerHTML='<p class="catalog-search-status">Searching Pokémon catalogue and checking printings…</p>';
   try {
     const url="https://api.tcgdex.net/v2/en/cards?name="+encodeURIComponent(term)+"&pagination:itemsPerPage=30";
     const response=await fetch(url);
     if(!response.ok) throw new Error("Catalogue returned HTTP "+response.status);
-    const cards=await response.json();
+    const briefs=await response.json();
     if(requestId!==pokemonSearchRequest) return;
-    if(!Array.isArray(cards)||!cards.length){pokemonCardResults.innerHTML='<p class="catalog-search-status">No cards found. Try another spelling or enter the details manually.</p>';return;}
-    pokemonCardResults.innerHTML=cards.slice(0,30).map(card=>'<button type="button" class="catalog-result" data-tcgdex-id="'+escapeHtml(card.id)+'"><span><strong>'+escapeHtml(card.name)+'</strong><small>'+escapeHtml(card.id)+'</small></span><span>Select →</span></button>').join("");
+    if(!Array.isArray(briefs)||!briefs.length){pokemonCardResults.innerHTML='<p class="catalog-search-status">No cards found. Try another spelling or enter the details manually.</p>';return;}
+    const details=await Promise.all(briefs.slice(0,18).map(async brief=>{
+      try{
+        const detailResponse=await fetch("https://api.tcgdex.net/v2/en/cards/"+encodeURIComponent(brief.id));
+        if(!detailResponse.ok)return null;
+        return await detailResponse.json();
+      }catch{return null;}
+    }));
+    if(requestId!==pokemonSearchRequest)return;
+    const cards=details.filter(Boolean);
+    if(!cards.length){pokemonCardResults.innerHTML='<p class="catalog-search-status">Could not load printing details. Try again or enter the details manually.</p>';return;}
+    pokemonCardResults.innerHTML=cards.map(card=>{
+      const variants=card.variants||{};
+      const variantLabels=[];
+      if(variants.firstEdition)variantLabels.push("1st Edition available");
+      if(variants.normal)variantLabels.push("Normal");
+      if(variants.holo)variantLabels.push("Holo");
+      if(variants.reverse)variantLabels.push("Reverse");
+      const image=card.image?card.image.replace(/\/$/,"")+"/low.webp":"";
+      return '<button type="button" class="catalog-result catalog-result-rich" data-tcgdex-id="'+escapeHtml(card.id)+'">'+
+        (image?'<img src="'+escapeHtml(image)+'" alt="" loading="lazy">':'')+
+        '<span class="catalog-result-copy"><strong>'+escapeHtml(card.name)+'</strong>'+
+        '<small>'+escapeHtml(card.set?.name||"Unknown set")+' · '+escapeHtml(card.localId||"No number")+'</small>'+
+        '<small>'+escapeHtml(variantLabels.join(" · ")||"Printing variants not listed")+'</small></span>'+
+        '<span class="catalog-result-action">Select →</span></button>';
+    }).join("");
   } catch(error) {
     if(requestId===pokemonSearchRequest) pokemonCardResults.innerHTML='<p class="catalog-search-status">Catalogue search unavailable. Manual entry is still available.</p>';
     console.warn("Cardpedia: Pokémon catalogue search failed.",error);
@@ -591,8 +615,11 @@ document.querySelector("#pokemon-scan-identify").addEventListener("click",async(
       pokemonCardSelection.textContent="Possible match: "+card.name+" · "+(card.setName||card.releaseName||"Set unknown")+" · "+(card.number||"Number unknown")+" · High confidence. Verify edition and printing before publishing.";
       pokemonScanStatus.textContent="High-confidence candidate found. Verify the exact edition and printing.";
     }else{
-      pokemonCardSelection.textContent="Pokémon detected: "+card.name+" · "+(detection.confidence||"Confidence unavailable")+". Edition, set and collector number were not confirmed. Search the catalogue and select the exact printing.";
-      pokemonScanStatus.textContent="The Pokémon was recognized, but the exact card printing was not confirmed. Select the correct edition manually.";
+      pokemonCardSelection.textContent="Pokémon detected: "+card.name+" · "+(detection.confidence||"Confidence unavailable")+". Exact set, number and edition need confirmation below.";
+      pokemonScanStatus.textContent="Pokémon recognized. Comparing catalogue printings — select the exact artwork, set and edition.";
+      pokemonCardSearch.value=card.name;
+      manualCardDetails.open=true;
+      await searchPokemonCatalog(card.name);
     }
   }catch(error){
     console.error("Cardpedia: photo identification failed.",error);
@@ -627,6 +654,13 @@ pokemonCardResults.addEventListener("click",async(event)=>{
     collectorNumberInput.value=card.localId||"";
     listingForm.querySelector("[name='rarity']").value=card.rarity||"other";
     const variants=card.variants||{};
+    editionInput.value="";
+    if(variants.firstEdition){
+      pokemonCardSelection.textContent="Selected candidate: "+card.name+" · "+(set.name||"Set unknown")+" · "+(card.localId||"No number")+". 1st Edition printing exists — choose 1st Edition or Unlimited below after checking the card stamp.";
+      manualCardDetails.open=true;
+    }else{
+      pokemonCardSelection.textContent="Selected: "+card.name+" · "+(set.name||"Set unknown")+" · "+(card.localId||"No number")+" · "+(card.rarity||"Rarity not listed")+". Confirm the physical card matches this printing.";
+    }
     const finishOptions=[];
     if(variants.normal)finishOptions.push("non_holo");
     if(variants.holo)finishOptions.push("holofoil");
