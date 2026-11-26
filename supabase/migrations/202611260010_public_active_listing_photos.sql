@@ -1,3 +1,7 @@
+-- Grant the read privileges required for the public marketplace query and signed URLs.
+grant select on table public.listing_images to anon, authenticated;
+grant select on table storage.objects to anon, authenticated;
+
 -- Allow visitors to request signed URLs for photos attached to active listings.
 -- The bucket remains private; draft and withdrawn photos remain inaccessible to visitors.
 drop policy if exists "Cardpedia visitors read active listing photos" on storage.objects;
