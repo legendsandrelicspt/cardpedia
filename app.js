@@ -67,13 +67,13 @@ function restoreSavedState() {
     }
 
     if (Array.isArray(saved.favorites)) {
-      state.favorites = new Set(saved.favorites.map(Number).filter(Number.isFinite));
+      state.favorites = new Set(saved.favorites.map(String));
     }
 
     if (Array.isArray(saved.cart)) {
       state.cart = new Map();
       saved.cart.forEach(({ id, quantity }) => {
-        const item = state.listings.find((listing) => Number(listing.id) === Number(id));
+        const item = state.listings.find((listing) => String(listing.id) === String(id));
         const count = Math.floor(Number(quantity));
         if (item && count > 0) state.cart.set(item.id, { item, quantity: count });
       });
@@ -130,7 +130,7 @@ function productMarkup(item) {
   const gameClass = item.game === "Yu-Gi-Oh!" ? "yu-gi-oh" : item.game.toLowerCase().replace(/[^a-z]+/g, "-");
   return `
     <article class="product-card">
-      <div class="product-visual ${item.visual}">
+      <div class="product-visual ${item.visual}">${item.imageUrl ? `<img class="listing-product-photo" src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" />` : ""}
         <span class="product-badge">${escapeHtml(item.badge)}</span>
         <button class="favorite-button ${favorite ? "is-favorite" : ""}" data-favorite="${item.id}" aria-label="${favorite ? "Remove from favourites" : "Add to favourites"}">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.7c0 4.1-8.8 10-8.8 10s-8.8-5.9-8.8-10a4.8 4.8 0 0 1 8.8-2.6 4.8 4.8 0 0 1 8.8 2.6Z" /></svg>
@@ -157,6 +157,58 @@ function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (character) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   })[character]);
+}
+
+const conditionToLabel = {mint:"M",near_mint:"NM",excellent:"EX",good:"GD",lightly_played:"LP",played:"PL",poor:"PO",moderately_played:"MP",heavily_played:"HP",damaged:"DMG",graded:"graded",sealed:"sealed"};
+const gameToLabel = {pokemon:"Pokémon",mtg:"Magic",onepiece:"One Piece",yugioh:"Yu-Gi-Oh!",lorcana:"Lorcana",riftbound:"Riftbound",sealed:"Sealed"};
+async function loadMarketplaceListings() {
+  if (!supabaseClient) return;
+  try {
+    const {data:rows,error} = await supabaseClient.from("listings")
+      .select("id,seller_id,title,description,game_id,listing_type,condition,language,price_amount,currency,quantity,rarity,set_name,set_code,collector_number,edition,grading_company,grading_grade,created_at,listing_images(storage_path,image_type,sort_order)")
+      .eq("status","active").order("created_at",{ascending:false}).limit(100);
+    if(error) throw error;
+    const sellerIds=[...new Set((rows||[]).map(row=>row.seller_id).filter(Boolean))];
+    let profiles=[];
+    if(sellerIds.length){
+      const profileResult=await supabaseClient.from("profiles").select("id,username,display_name").in("id",sellerIds);
+      if(!profileResult.error) profiles=profileResult.data||[];
+    }
+    const profileById=new Map(profiles.map(profile=>[profile.id,profile]));
+    const imagePaths=(rows||[]).flatMap(row=>(row.listing_images||[]).map(image=>image.storage_path));
+    let signedByPath=new Map();
+    if(imagePaths.length){
+      const {data:signed,error:signedError}=await supabaseClient.storage.from("Cardpedia-listings").createSignedUrls(imagePaths,3600);
+      if(signedError) console.warn("Cardpedia: listing photos could not be loaded.",signedError.message);
+      else signedByPath=new Map((signed||[]).filter(item=>item.signedUrl).map(item=>[item.path,item.signedUrl]));
+    }
+    const liveListings=(rows||[]).map(row=>{
+      const images=(row.listing_images||[]).sort((a,b)=>a.sort_order-b.sort_order);
+      const photo=images.find(image=>image.image_type==="front")||images[0];
+      const profile=profileById.get(row.seller_id);
+      const seller=profile?.username||profile?.display_name||"Cardpedia seller";
+      const game=gameToLabel[row.game_id]||row.game_id;
+      const note=[row.set_name,row.collector_number,row.edition,row.language].filter(Boolean).join(" · ")||row.description||row.rarity||"";
+      return {
+        id:row.id,name:row.title,game,category:game,price:Number(row.price_amount||0),quantity:row.quantity,
+        condition:conditionToLabel[row.condition]||row.condition,badge:row.condition==="graded"?(row.grading_company+" "+row.grading_grade):row.rarity||"New listing",
+        seller,rating:"New seller",emoji:"✦",art:"",visual:"visual-gold",
+        mode:row.listing_type==="sale"?"buy":row.listing_type==="trade"?"trade":"both",
+        note,imageUrl:photo?signedByPath.get(photo.storage_path)||"": "",currency:row.currency||"EUR"
+      };
+    });
+    if(liveListings.length){
+      state.listings=liveListings;
+      for(const [id] of state.cart) if(!liveListings.some(item=>String(item.id)===String(id))) state.cart.delete(id);
+      renderListings(); renderCounts(); renderCart();
+      console.info("Cardpedia: loaded "+liveListings.length+" active marketplace listings.");
+    } else {
+      state.listings=[...initialListings]; renderListings();
+      console.info("Cardpedia: no active marketplace listings yet; showing discovery examples.");
+    }
+  } catch(error) {
+    console.error("Cardpedia: marketplace listings could not be loaded.",error.message);
+  }
 }
 
 function renderListings() {
@@ -279,7 +331,7 @@ function openTransactionModal(type, items = []) {
 document.addEventListener("click", (event) => {
   const favoriteButton = event.target.closest("[data-favorite]");
   if (favoriteButton) {
-    const id = Number(favoriteButton.dataset.favorite);
+    const id = String(favoriteButton.dataset.favorite);
     state.favorites.has(id) ? state.favorites.delete(id) : state.favorites.add(id);
     saveState();
     renderListings();
@@ -289,7 +341,8 @@ document.addEventListener("click", (event) => {
 
   const addButton = event.target.closest("[data-add]");
   if (addButton) {
-    const item = state.listings.find((listing) => listing.id === Number(addButton.dataset.add));
+    const item = state.listings.find((listing) => String(listing.id) === String(addButton.dataset.add));
+    if (!item) return;
     const current = state.cart.get(item.id);
     state.cart.set(item.id, { item, quantity: (current?.quantity || 0) + 1 });
     saveState();
@@ -300,8 +353,8 @@ document.addEventListener("click", (event) => {
 
   const tradeButton = event.target.closest("[data-trade]");
   if (tradeButton) {
-    const item = state.listings.find((listing) => listing.id === Number(tradeButton.dataset.trade));
-    openTransactionModal("trade", [{ item }]);
+    const item = state.listings.find((listing) => String(listing.id) === String(tradeButton.dataset.trade));
+    if (item) openTransactionModal("trade", [{ item }]);
   }
 
   if (event.target.closest("#preview-request")) {
@@ -310,7 +363,7 @@ document.addEventListener("click", (event) => {
 
   const removeButton = event.target.closest("[data-remove]");
   if (removeButton) {
-    state.cart.delete(Number(removeButton.dataset.remove));
+    state.cart.delete(String(removeButton.dataset.remove));
     saveState();
     renderCounts();
     renderCart();
@@ -589,8 +642,7 @@ listingForm.addEventListener("submit", async (event) => {
       art:game==="Sealed"?"art-sealed":game==="Magic"?"art-magic":game==="One Piece"?"art-pirate":game==="Yu-Gi-Oh!"?"art-dragon":game==="Lorcana"?"art-gold":game==="Riftbound"?"art-magic":"art-pokemon",
       visual:"visual-gold",mode:modeValue,note:String(form.get("notes")||"").trim()||rarity
     };
-    state.listings.unshift(item);
-    saveState();
+    await loadMarketplaceListings();
     if(state.category!=="all"&&state.category!==item.category) resetFilters();
     closeLayers();
     listingForm.reset();
