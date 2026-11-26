@@ -472,6 +472,9 @@ const setCodeInput = listingForm.querySelector("[name='set_code']");
 const collectorNumberInput = listingForm.querySelector("[name='collector_number']");
 const editionInput = listingForm.querySelector("[name='edition']");
 const pokemonCardSearch = listingForm.querySelector("#pokemon-card-search");
+const pokemonCatalogWrap = listingForm.querySelector("#pokemon-catalog-search-wrap");
+const manualCardDetails = listingForm.querySelector(".manual-card-details");
+
 const pokemonCardResults = listingForm.querySelector("#pokemon-card-results");
 const pokemonCardSelection = listingForm.querySelector("#pokemon-card-selection");
 let pokemonSearchTimer = null;
@@ -530,6 +533,9 @@ pokemonCardResults.addEventListener("click",async(event)=>{
     const option=[...setSelect.options].find(item=>item.textContent.toLowerCase().includes(String(set.name||"").toLowerCase())&&set.name);
     if(option)setSelect.value=option.value;
     pokemonCardSelection.textContent="Selected: "+card.name+" · "+(set.name||"Set unknown")+" · "+(card.localId||"No number")+" · "+(card.rarity||"Rarity not listed");
+    manualCardDetails.open=false;
+    pokemonCardSearch.value=card.name||"";
+
     pokemonCardResults.innerHTML="";
   }catch(error){
     pokemonCardResults.innerHTML='<p class="catalog-search-status">Could not load this card. Try again or enter the details manually.</p>';
@@ -554,7 +560,12 @@ async function loadSetsForGame() {
     setSelect.append(option);
   }
 }
-gameSelect.addEventListener("change",loadSetsForGame);
+gameSelect.addEventListener("change",()=>{
+  loadSetsForGame();
+  const isPokemon=gameSelect.value==="Pokémon";
+  pokemonCatalogWrap.hidden=!isPokemon;
+  if(!isPokemon){pokemonCardResults.innerHTML="";pokemonCardSearch.value="";}
+});
 setSelect.addEventListener("change",()=>{
   const selected=availableSets.find(set=>set.id===setSelect.value);
   if(selected){setNameInput.value=selected.name;setCodeInput.value=selected.code||"";}
