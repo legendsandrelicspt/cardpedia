@@ -174,14 +174,39 @@
     </main>
     <main id="my-listings-page" class="account-page" hidden>
       <div class="account-page-heading">
-        <div><span class="section-kicker">Your Cardpedia account</span><h1>My listings</h1><p>Manage your published cards and offers.</p></div>
+        <div><span class="section-kicker">CARDPEDIA · ACCOUNT CENTRE</span><h1>My account</h1><p id="account-page-email">Manage your Cardpedia activity and personal details.</p></div>
         <button type="button" class="button button-outline" id="back-to-marketplace">← Back to marketplace</button>
       </div>
-      <section class="my-listings-section" id="my-listings-section">
-        <div class="my-listings-heading"><div><h3>Your listings</h3><p>Update prices, quantities or withdraw listings.</p></div><button type="button" class="text-button" id="refresh-my-listings">Refresh</button></div>
-        <div id="my-listings-feedback" role="status" aria-live="polite"></div>
-        <div id="my-listings-container"></div>
+      <nav class="account-tabs" aria-label="Account sections" role="tablist">
+        <button type="button" class="account-tab is-active" role="tab" aria-selected="true" data-account-tab="overview">Overview</button>
+        <button type="button" class="account-tab" role="tab" aria-selected="false" data-account-tab="listings">My listings</button>
+        <button type="button" class="account-tab" role="tab" aria-selected="false" data-account-tab="purchases">My purchases</button>
+        <button type="button" class="account-tab" role="tab" aria-selected="false" data-account-tab="wantlist">Want list</button>
+        <button type="button" class="account-tab" role="tab" aria-selected="false" data-account-tab="alerts">Price alerts</button>
+        <button type="button" class="account-tab" role="tab" aria-selected="false" data-account-tab="profile">Profile & address</button>
+        <button type="button" class="account-tab" role="tab" aria-selected="false" data-account-tab="security">Security</button>
+      </nav>
+      <section class="account-panel is-active" data-account-panel="overview" role="tabpanel">
+        <div class="account-welcome"><div><span class="section-kicker">YOUR COLLECTOR SPACE</span><h2 id="account-welcome-title">Welcome to Cardpedia</h2><p>Everything you need to manage your marketplace activity.</p></div><span class="account-type-pill" id="account-type-pill">Collector account</span></div>
+        <div class="account-overview-grid">
+          <button type="button" class="account-overview-card" data-open-account-tab="listings"><span>SELLING</span><strong>My listings</strong><small>Manage your published cards and products →</small></button>
+          <button type="button" class="account-overview-card" data-open-account-tab="wantlist"><span>COLLECTING</span><strong>Want list</strong><small>Keep track of cards you are looking for →</small></button>
+          <button type="button" class="account-overview-card" data-open-account-tab="alerts"><span>MARKET WATCH</span><strong>Price alerts</strong><small>Follow prices and market movements →</small></button>
+          <button type="button" class="account-overview-card" data-open-account-tab="profile"><span>YOUR DETAILS</span><strong>Profile & address</strong><small>Review your personal and business details →</small></button>
+        </div>
       </section>
+      <section class="account-panel" data-account-panel="listings" role="tabpanel" hidden>
+        <section class="my-listings-section" id="my-listings-section">
+          <div class="my-listings-heading"><div><h3>Your listings</h3><p>Update prices, quantities or withdraw listings.</p></div><button type="button" class="text-button" id="refresh-my-listings">Refresh</button></div>
+          <div id="my-listings-feedback" role="status" aria-live="polite"></div>
+          <div id="my-listings-container"></div>
+        </section>
+      </section>
+      <section class="account-panel" data-account-panel="purchases" role="tabpanel" hidden><div class="account-empty-state"><span>↗</span><h2>My purchases</h2><p>Your purchase history and order tracking will appear here when Cardpedia checkout is available.</p><small>Planned feature</small></div></section>
+      <section class="account-panel" data-account-panel="wantlist" role="tabpanel" hidden><div class="account-empty-state"><span>♡</span><h2>Want list</h2><p>Save cards you are searching for and keep your collecting goals organised.</p><small>Planned feature</small></div></section>
+      <section class="account-panel" data-account-panel="alerts" role="tabpanel" hidden><div class="account-empty-state"><span>⌁</span><h2>Price alerts</h2><p>Follow card prices and receive an alert when a listing matches your target.</p><small>Planned feature</small></div></section>
+      <section class="account-panel" data-account-panel="profile" role="tabpanel" hidden><div class="account-detail-panel"><span class="section-kicker">ACCOUNT DETAILS</span><h2>Profile & address</h2><p>Your private contact and address details. These are not displayed publicly on your listings.</p><div id="account-profile-details">Loading your details…</div></div></section>
+      <section class="account-panel" data-account-panel="security" role="tabpanel" hidden><div class="account-detail-panel"><span class="section-kicker">ACCOUNT ACCESS</span><h2>Security</h2><p id="account-security-email"></p><p>Password changes and additional sign-in protections will be managed here.</p><button type="button" class="button button-outline" id="account-signout">Sign out</button></div></section>
     </main>
 
     <footer class="site-footer">
