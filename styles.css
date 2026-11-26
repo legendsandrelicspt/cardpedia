@@ -618,3 +618,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .catalog-result small { font-size:10px; color:var(--muted); }
 .catalog-result span:last-child { color:var(--primary); font-size:11px; white-space:nowrap; }
 .catalog-selection-note { color:var(--primary)!important; font-weight:600; }
+
+.manual-card-details { margin-top:12px; border-top:1px solid var(--border); padding-top:10px; }
+.manual-card-details summary { cursor:pointer; color:var(--primary); font-size:12px; font-weight:600; padding:5px 0; }
+.manual-card-details[open] summary { margin-bottom:12px; }
