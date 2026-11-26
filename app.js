@@ -451,7 +451,7 @@ listingForm.addEventListener("submit", async (event) => {
   }
   const gameNames = {
     "Pokémon":"pokemon", "Magic":"mtg", "One Piece":"onepiece",
-    "Yu-Gi-Oh!":"yugioh", "Lorcana":"lorcana", "Riftbound":"riftbound", "Sealed":"pokemon"
+    "Yu-Gi-Oh!":"yugioh", "Lorcana":"lorcana", "Riftbound":"riftbound", "Sealed":"sealed"
   };
   const modeMap = {buy:"sale",trade:"trade",both:"sale_or_trade"};
   const conditionMap = {NM:"near_mint",LP:"lightly_played",sealed:"sealed"};
@@ -500,8 +500,8 @@ listingForm.addEventListener("submit", async (event) => {
       id:Date.now(),name:String(form.get("name")).trim(),game,category:game,
       price:Number(form.get("price")),condition:form.get("condition"),
       badge:modeValue==="trade"?"For trade":"New listing",seller:session.user.user_metadata?.username||session.user.email.split("@")[0],
-      rating:"★ new",emoji:game==="Pokémon"?"✦":game==="Magic"?"◈":game==="One Piece"?"☠":"♢",
-      art:game==="Sealed"?"art-sealed":game==="Magic"?"art-magic":game==="One Piece"?"art-pirate":game==="Yu-Gi-Oh!"?"art-dragon":"art-pokemon",
+      rating:"★ new",emoji:game==="Pokémon"?"✦":game==="Magic"?"◈":game==="One Piece"?"☠":game==="Lorcana"?"✧":game==="Riftbound"?"◈":"♢",
+      art:game==="Sealed"?"art-sealed":game==="Magic"?"art-magic":game==="One Piece"?"art-pirate":game==="Yu-Gi-Oh!"?"art-dragon":game==="Lorcana"?"art-gold":game==="Riftbound"?"art-magic":"art-pokemon",
       visual:"visual-gold",mode:modeValue,note:String(form.get("notes")||"").trim()||rarity
     };
     state.listings.unshift(item);
