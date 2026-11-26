@@ -574,16 +574,26 @@ document.querySelector("#pokemon-scan-identify").addEventListener("click",async(
     if(!data?.success||detections.length===0)throw new Error("No card was identified. Try a sharper photo with one card filling the frame.");
     if(detections.length!==1)throw new Error("More than one card was detected. Retake the photo with only one card visible.");
     const detection=detections[0],card=detection.card||{};
-    if(!card.name||!card.id)throw new Error("No exact card match was returned. Try another photo or use catalogue search.");
+    if(!card.name)throw new Error("The Pokémon was detected, but no card name was returned. Try catalogue search.");
+    const confidence=String(detection.confidence||"").toLowerCase();
     listingForm.querySelector("[name='name']").value=card.name;
-    setNameInput.value=card.setName||card.releaseName||"";
+    setNameInput.value="";
     setCodeInput.value="";
-    collectorNumberInput.value=card.number||"";
-    pokemonCardSelection.textContent="Photo match: "+card.name+" · "+(card.setName||card.releaseName||"Set unknown")+" · "+(card.number||"Number unknown")+" · Confidence: "+(detection.confidence||"not provided")+". Confirm details before publishing.";
-    pokemonScanStatus.textContent="Card identified. Check the details and condition before publishing.";
-    listingForm.querySelector("[name='catalog_source']").value="cardsight";
-    listingForm.querySelector("[name='catalog_card_id']").value=card.id||"";
+    collectorNumberInput.value="";
+    listingForm.querySelector("[name='catalog_source']").value="";
+    listingForm.querySelector("[name='catalog_card_id']").value="";
     listingForm.querySelector("[name='catalog_image_url']").value="";
+    if(confidence==="high"&&card.id){
+      setNameInput.value=card.setName||card.releaseName||"";
+      collectorNumberInput.value=card.number||"";
+      listingForm.querySelector("[name='catalog_source']").value="cardsight";
+      listingForm.querySelector("[name='catalog_card_id']").value=card.id;
+      pokemonCardSelection.textContent="Possible match: "+card.name+" · "+(card.setName||card.releaseName||"Set unknown")+" · "+(card.number||"Number unknown")+" · High confidence. Verify edition and printing before publishing.";
+      pokemonScanStatus.textContent="High-confidence candidate found. Verify the exact edition and printing.";
+    }else{
+      pokemonCardSelection.textContent="Pokémon detected: "+card.name+" · "+(detection.confidence||"Confidence unavailable")+". Edition, set and collector number were not confirmed. Search the catalogue and select the exact printing.";
+      pokemonScanStatus.textContent="The Pokémon was recognized, but the exact card printing was not confirmed. Select the correct edition manually.";
+    }
   }catch(error){
     console.error("Cardpedia: photo identification failed.",error);
     pokemonScanStatus.textContent=error.message||"Identification failed. Please try again.";
