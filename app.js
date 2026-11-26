@@ -510,8 +510,11 @@ listingForm.addEventListener("submit", async (event) => {
       uploadedPaths.push(path);
       metadata.push({listing_id:listingId,storage_path:path,image_type:entry.type,sort_order:index});
     }
-    const {error:imageError}=await supabaseClient.from("listing_images").insert(metadata);
-    if(imageError) throw imageError;
+    // Supabase rejects an empty insert payload; listings without photos have no image rows to create.
+    if (metadata.length > 0) {
+      const {error:imageError}=await supabaseClient.from("listing_images").insert(metadata);
+      if(imageError) throw imageError;
+    }
     const {error:publishError}=await supabaseClient.from("listings").update({status:"active"}).eq("id",listingId).eq("seller_id",session.user.id);
     if(publishError) throw publishError;
     const game=form.get("game"), modeValue=form.get("mode");
