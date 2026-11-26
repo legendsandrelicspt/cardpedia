@@ -494,7 +494,7 @@ function setAuthMode(mode) {
   document.querySelector("#auth-feedback").textContent = "";
 }
 
-function openAuthModal() {
+async function openAuthModal() {
   closeLayers();
   setAuthMode("login");
   document.querySelector("#auth-feedback").textContent = "";
