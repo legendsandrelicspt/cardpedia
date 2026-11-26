@@ -579,3 +579,5 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 
 /* Respect hidden state for account dialog sections. */
 #auth-modal [hidden] { display: none !important; }
+
+#auth-modal [name="username"] { text-transform: none; }
