@@ -167,7 +167,7 @@ async function loadMarketplaceListings() {
   if (!supabaseClient) return;
   try {
     const {data:rows,error} = await supabaseClient.from("listings")
-      .select("id,seller_id,title,description,game_id,listing_type,condition,language,price_amount,currency,quantity,rarity,finish,set_name,set_code,collector_number,edition,grading_company,grading_grade,created_at,listing_images(storage_path,image_type,sort_order)")
+      .select("id,seller_id,title,description,game_id,listing_type,condition,language,price_amount,currency,quantity,rarity,finish,set_name,set_code,collector_number,edition,catalog_source,catalog_card_id,grading_company,grading_grade,created_at,listing_images(storage_path,image_type,sort_order)")
       .eq("status","active").order("created_at",{ascending:false}).limit(100);
     if(error) throw error;
     const sellerIds=[...new Set((rows||[]).map(row=>row.seller_id).filter(Boolean))];
@@ -471,6 +471,72 @@ const setNameInput = listingForm.querySelector("#listing-set-name");
 const setCodeInput = listingForm.querySelector("[name='set_code']");
 const collectorNumberInput = listingForm.querySelector("[name='collector_number']");
 const editionInput = listingForm.querySelector("[name='edition']");
+const pokemonCardSearch = listingForm.querySelector("#pokemon-card-search");
+const pokemonCardResults = listingForm.querySelector("#pokemon-card-results");
+const pokemonCardSelection = listingForm.querySelector("#pokemon-card-selection");
+let pokemonSearchTimer = null;
+let pokemonSearchRequest = 0;
+async function searchPokemonCatalog(term) {
+  const requestId=++pokemonSearchRequest;
+  pokemonCardResults.innerHTML='<p class="catalog-search-status">Searching Pokémon catalogue…</p>';
+  try {
+    const url="https://api.tcgdex.net/v2/en/cards?name="+encodeURIComponent(term)+"&pagination:itemsPerPage=30";
+    const response=await fetch(url);
+    if(!response.ok) throw new Error("Catalogue returned HTTP "+response.status);
+    const cards=await response.json();
+    if(requestId!==pokemonSearchRequest) return;
+    if(!Array.isArray(cards)||!cards.length){pokemonCardResults.innerHTML='<p class="catalog-search-status">No cards found. Try another spelling or enter the details manually.</p>';return;}
+    pokemonCardResults.innerHTML=cards.slice(0,30).map(card=>'<button type="button" class="catalog-result" data-tcgdex-id="'+escapeHtml(card.id)+'"><span><strong>'+escapeHtml(card.name)+'</strong><small>'+escapeHtml(card.id)+'</small></span><span>Select →</span></button>').join("");
+  } catch(error) {
+    if(requestId===pokemonSearchRequest) pokemonCardResults.innerHTML='<p class="catalog-search-status">Catalogue search unavailable. Manual entry is still available.</p>';
+    console.warn("Cardpedia: Pokémon catalogue search failed.",error);
+  }
+}
+pokemonCardSearch.addEventListener("input",()=>{
+  clearTimeout(pokemonSearchTimer);
+  const term=pokemonCardSearch.value.trim();
+  if(term.length<2){pokemonCardResults.innerHTML="";return;}
+  pokemonSearchTimer=setTimeout(()=>searchPokemonCatalog(term),350);
+});
+pokemonCardResults.addEventListener("click",async(event)=>{
+  const button=event.target.closest("[data-tcgdex-id]");
+  if(!button)return;
+  const cardId=button.dataset.tcgdexId;
+  pokemonCardResults.innerHTML='<p class="catalog-search-status">Loading card details…</p>';
+  try{
+    const response=await fetch("https://api.tcgdex.net/v2/en/cards/"+encodeURIComponent(cardId));
+    if(!response.ok)throw new Error("Card details could not be loaded.");
+    const card=await response.json();
+    const set=card.set||{};
+    listingForm.querySelector("[name='catalog_source']").value="tcgdex";
+    listingForm.querySelector("[name='catalog_card_id']").value=card.id||cardId;
+    listingForm.querySelector("[name='name']").value=card.name||"";
+    setNameInput.value=set.name||"";
+    setCodeInput.value=set.id||"";
+    collectorNumberInput.value=card.localId||"";
+    listingForm.querySelector("[name='rarity']").value=card.rarity||"other";
+    const variants=card.variants||{};
+    const finishOptions=[];
+    if(variants.normal)finishOptions.push("non_holo");
+    if(variants.holo)finishOptions.push("holofoil");
+    if(variants.reverse)finishOptions.push("reverse");
+    const finishSelect=listingForm.querySelector("[name='finish']");
+    if(finishOptions.length){
+      finishSelect.value=finishOptions[0];
+      [...finishSelect.options].forEach(option=>option.disabled=!finishOptions.includes(option.value)&&option.value!=="other"&&option.value!=="stamped");
+    } else {
+      [...finishSelect.options].forEach(option=>option.disabled=false);
+    }
+    const option=[...setSelect.options].find(item=>item.textContent.toLowerCase().includes(String(set.name||"").toLowerCase())&&set.name);
+    if(option)setSelect.value=option.value;
+    pokemonCardSelection.textContent="Selected: "+card.name+" · "+(set.name||"Set unknown")+" · "+(card.localId||"No number")+" · "+(card.rarity||"Rarity not listed");
+    pokemonCardResults.innerHTML="";
+  }catch(error){
+    pokemonCardResults.innerHTML='<p class="catalog-search-status">Could not load this card. Try again or enter the details manually.</p>';
+    console.warn("Cardpedia: Pokémon card detail lookup failed.",error);
+  }
+});
+
 const gameSelect = listingForm.querySelector("[name='game']");
 let availableSets = [];
 async function loadSetsForGame() {
@@ -599,6 +665,8 @@ listingForm.addEventListener("submit", async (event) => {
       set_code: String(form.get("set_code") || "").trim() || null,
       collector_number: String(form.get("collector_number") || "").trim() || null,
       edition: String(form.get("edition") || "").trim() || null,
+      catalog_source: String(form.get("catalog_source") || "").trim() || null,
+      catalog_card_id: String(form.get("catalog_card_id") || "").trim() || null,
       title: String(form.get("name")).trim(),
       description: String(form.get("notes") || "").trim(),
       listing_type: modeMap[form.get("mode")],
