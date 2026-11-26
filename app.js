@@ -433,7 +433,7 @@ function updatePhotoRequirements() {
     listingForm.querySelector("[name='grading_certification_number']").value = "";
     gradingLabelInput.value = "";
   }
-  frontInput.required = frontBackRequired;
+  frontInput.required = frontBackRequired || isGraded;
   backInput.required = frontBackRequired;
   defectPhotosInput.required = eligibleCondition && defectCheckbox.checked;
   document.querySelector("#defect-photos-wrap").hidden = !defectCheckbox.checked;
