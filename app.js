@@ -462,3 +462,125 @@ document.addEventListener("keydown", (event) => {
 renderListings();
 renderCounts();
 renderCart();
+
+
+const authModal = document.querySelector("#auth-modal");
+const authForm = document.querySelector("#auth-form");
+let authMode = "login";
+
+function updateAccountButton(session) {
+  const button = document.querySelector("#account-button");
+  if (!button) return;
+  const email = session?.user?.email;
+  button.textContent = email ? "My account" : "Account";
+  button.dataset.signedIn = email ? "true" : "false";
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  const signup = mode === "signup";
+  document.querySelector("#auth-title").textContent = signup ? "Create your account" : "Welcome back";
+  document.querySelector("#auth-description").textContent = signup
+    ? "Join Cardpedia to manage your collection and publish listings."
+    : "Sign in to manage your collection and listings.";
+  document.querySelector("#auth-name-wrap").hidden = !signup;
+  document.querySelector("#auth-form [name='display_name']").required = signup;
+  document.querySelector("#auth-form [name='password']").autocomplete = signup ? "new-password" : "current-password";
+  document.querySelector("#auth-submit").innerHTML = signup ? "Create account <span>→</span>" : "Sign in <span>→</span>";
+  document.querySelector("#auth-switch").innerHTML = signup
+    ? 'Already registered? <button type="button" id="auth-toggle">Sign in</button>'
+    : 'New to Cardpedia? <button type="button" id="auth-toggle">Create an account</button>';
+  document.querySelector("#auth-feedback").textContent = "";
+}
+
+function openAuthModal() {
+  closeLayers();
+  setAuthMode("login");
+  document.querySelector("#auth-feedback").textContent = "";
+  document.querySelector("#auth-signout").hidden = !window.cardpediaSession;
+  if (window.cardpediaSession?.user?.email) {
+    document.querySelector("#auth-title").textContent = "Your account";
+    document.querySelector("#auth-description").textContent = window.cardpediaSession.user.email;
+    document.querySelector("#auth-form").hidden = true;
+    document.querySelector("#auth-switch").hidden = true;
+    document.querySelector("#auth-signout").hidden = false;
+  } else {
+    document.querySelector("#auth-form").hidden = false;
+    document.querySelector("#auth-switch").hidden = false;
+  }
+  openLayer(authModal);
+}
+
+document.querySelector("#account-button")?.addEventListener("click", openAuthModal);
+document.querySelector("#auth-switch")?.addEventListener("click", (event) => {
+  if (event.target.closest("#auth-toggle")) setAuthMode(authMode === "login" ? "signup" : "login");
+});
+
+document.querySelector("#auth-form")?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!supabaseClient) return;
+  const feedback = document.querySelector("#auth-feedback");
+  const submit = document.querySelector("#auth-submit");
+  const form = new FormData(event.currentTarget);
+  const email = String(form.get("email")).trim();
+  const password = String(form.get("password"));
+  submit.disabled = true;
+  feedback.textContent = authMode === "signup" ? "Creating your account…" : "Signing in…";
+  try {
+    let result;
+    if (authMode === "signup") {
+      const displayName = String(form.get("display_name")).trim();
+      result = await supabaseClient.auth.signUp({
+        email, password,
+        options: {
+          data: { display_name: displayName },
+          emailRedirectTo: "https://legendsandrelicspt.github.io/cardpedia/"
+        }
+      });
+      if (!result.error && !result.data.session) {
+        feedback.textContent = "Account created. Check your email and confirm your address before signing in.";
+      }
+    } else {
+      result = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (!result.error) {
+        feedback.textContent = "Signed in successfully.";
+        setTimeout(closeLayers, 700);
+      }
+    }
+    if (result.error) feedback.textContent = result.error.message;
+  } catch (error) {
+    feedback.textContent = error.message || "Authentication could not be completed.";
+  } finally {
+    submit.disabled = false;
+  }
+});
+
+document.querySelector("#auth-signout")?.addEventListener("click", async () => {
+  const { error } = await supabaseClient.auth.signOut();
+  document.querySelector("#auth-feedback").textContent = error ? error.message : "You have signed out.";
+  if (!error) {
+    document.querySelector("#auth-form").hidden = false;
+    document.querySelector("#auth-switch").hidden = false;
+    document.querySelector("#auth-signout").hidden = true;
+    setAuthMode("login");
+  }
+});
+
+if (supabaseClient) {
+  supabaseClient.auth.getSession().then(({ data }) => {
+    window.cardpediaSession = data.session;
+    updateAccountButton(data.session);
+  });
+  supabaseClient.auth.onAuthStateChange((_event, session) => {
+    window.cardpediaSession = session;
+    updateAccountButton(session);
+    if (session?.user) {
+      supabaseClient.from("profiles").upsert({
+        id: session.user.id,
+        display_name: session.user.user_metadata?.display_name || session.user.email?.split("@")[0]
+      }, { onConflict: "id" }).then(({ error }) => {
+        if (error) console.warn("Cardpedia: profile sync could not be completed.", error.message);
+      });
+    }
+  });
+}
