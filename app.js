@@ -489,7 +489,7 @@ listingForm.addEventListener("submit", async (event) => {
       language: form.get("language"),
       rarity,
       has_defects: defectCheckbox.checked,
-      price_amount: form.get("mode") === "trade" ? null : Number(form.get("price")),
+      price_amount: Number(form.get("price")),
       status: "draft"
     }).select("id").single();
     if (draftError) throw draftError;
