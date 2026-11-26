@@ -1,3 +1,30 @@
+// Supabase client: the publishable key is intended for browser use.
+// Data access is controlled by PostgreSQL Row Level Security (RLS).
+const supabaseClient = (() => {
+  const config = window.CARDPEDIA_SUPABASE_CONFIG;
+  if (!config || !window.supabase?.createClient) {
+    console.warn("Cardpedia: Supabase configuration or SDK is unavailable.");
+    return null;
+  }
+  return window.supabase.createClient(config.url, config.publishableKey);
+})();
+window.cardpediaSupabase = supabaseClient;
+
+async function verifySupabaseConnection() {
+  if (!supabaseClient) return;
+  const { data, error } = await supabaseClient
+    .from("games")
+    .select("id,name")
+    .eq("is_active", true)
+    .order("name");
+  if (error) {
+    console.error("Cardpedia: Supabase connection check failed.", error.message);
+    return;
+  }
+  console.info(`Cardpedia: Supabase connected; ${data.length} active games available.`);
+}
+verifySupabaseConnection();
+
 const initialListings = [
   { id: 1, name: "Umbreon VMAX — Alt Art", game: "Pokémon", category: "Pokémon", price: 289.9, condition: "NM", badge: "Collector's pick", seller: "rita.collects", rating: "★ 4.9", emoji: "☾", art: "art-pokemon", visual: "visual-violet", mode: "buy", note: "English · Evolving Skies" },
   { id: 2, name: "The One Ring — Showcase", game: "Magic", category: "Magic", price: 74.5, condition: "NM", badge: "Foil", seller: "mana_vault", rating: "★ 5.0", emoji: "◉", art: "art-magic", visual: "visual-gold", mode: "trade", note: "English · Tales of Middle-earth" },
