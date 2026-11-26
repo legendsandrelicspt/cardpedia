@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script id="cardpedia-supabase-config" src="supabase-config.js"></script>
-    <script src="app.js?v=13" defer></script>
+    <script src="app.js?v=14" defer></script>
   </head>
   <body>
     <div class="announcement-bar"><span>THE EUROPEAN COLLECTOR'S MARKETPLACE</span><span class="announcement-note">Independent collectors · 20+ countries</span></div>
@@ -196,6 +196,15 @@
         <div class="photo-requirements" id="printing-details">
           <strong>Card identification</strong>
           <p>Select a set from the catalogue or enter the details manually if it is not listed yet.</p>
+          <div class="catalog-search">
+            <strong>Find the exact Pokémon card</strong>
+            <p>Search the Pokémon card catalogue by name. Selecting a result fills in the set, number, rarity and available finishes.</p>
+            <label>Card name<input id="pokemon-card-search" type="search" placeholder="e.g. Charizard, Pikachu, Mewtwo" autocomplete="off" /></label>
+            <div id="pokemon-card-results" class="catalog-search-results" aria-live="polite"></div>
+            <p id="pokemon-card-selection" class="catalog-selection-note">No catalogue card selected. Manual entry is still available below.</p>
+            <input type="hidden" name="catalog_source" value="" />
+            <input type="hidden" name="catalog_card_id" value="" />
+          </div>
           <label>Set / collection<select name="set_id" id="listing-set-select"><option value="">Choose a set (optional)</option><option value="manual">Set not listed — enter manually</option></select></label>
           <label>Set / collection name<input name="set_name" id="listing-set-name" maxlength="120" placeholder="e.g. Scarlet & Violet—151" /></label>
           <div class="form-row">
