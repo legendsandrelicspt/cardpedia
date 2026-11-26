@@ -44,6 +44,7 @@ const state = {
   mode: "all",
   search: "",
   condition: "all",
+  finish: "all",
   maxPrice: 500,
   sort: "featured",
   favoritesOnly: false,
@@ -113,9 +114,10 @@ function visibleListings() {
     const matchesMode = state.mode === "all" || item.mode === state.mode || item.mode === "both";
     const matchesSearch = `${item.name} ${item.game} ${item.seller} ${item.note}`.toLocaleLowerCase("en-GB").includes(state.search.toLocaleLowerCase("en-GB"));
     const matchesCondition = state.condition === "all" || item.condition === state.condition;
+    const matchesFinish = state.finish === "all" || item.finish === state.finish;
     const matchesPrice = item.price <= state.maxPrice;
     const matchesFavorite = !state.favoritesOnly || state.favorites.has(item.id);
-    return matchesCategory && matchesMode && matchesSearch && matchesCondition && matchesPrice && matchesFavorite;
+    return matchesCategory && matchesMode && matchesSearch && matchesCondition && matchesFinish && matchesPrice && matchesFavorite;
   });
 
   if (state.sort === "price-low") items = items.sort((a, b) => a.price - b.price);
@@ -135,7 +137,7 @@ function productMarkup(item) {
         <button class="favorite-button ${favorite ? "is-favorite" : ""}" data-favorite="${item.id}" aria-label="${favorite ? "Remove from favourites" : "Add to favourites"}">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.7c0 4.1-8.8 10-8.8 10s-8.8-5.9-8.8-10a4.8 4.8 0 0 1 8.8-2.6 4.8 4.8 0 0 1 8.8 2.6Z" /></svg>
         </button>
-        <div class="product-art ${item.art}"><div class="product-art-inner"><span class="product-art-name">${escapeHtml(item.name)}</span><span class="product-art-emoji">${escapeHtml(item.emoji)}</span><span class="product-art-meta">CARDPEDIA · ${String(item.id).padStart(3, "0")}</span></div></div>
+        <div class="catalogue-card-placeholder"><div class="catalogue-card-top"><span>${escapeHtml(item.setName || item.game)}</span><span>${escapeHtml(item.rarityLabel || item.badge)}</span></div><div class="catalogue-card-art">${escapeHtml(item.emoji || "✦")}</div><div class="catalogue-card-bottom"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml([item.setCode,item.collectorNumber].filter(Boolean).join(" · ") || "CARDPEDIA · CARD CATALOGUE")}</span></div></div>
       </div>
       <div class="product-info">
         <div class="product-game"><span class="game-dot game-${gameClass}"></span>${escapeHtml(item.game)}</div>
@@ -165,7 +167,7 @@ async function loadMarketplaceListings() {
   if (!supabaseClient) return;
   try {
     const {data:rows,error} = await supabaseClient.from("listings")
-      .select("id,seller_id,title,description,game_id,listing_type,condition,language,price_amount,currency,quantity,rarity,set_name,set_code,collector_number,edition,grading_company,grading_grade,created_at,listing_images(storage_path,image_type,sort_order)")
+      .select("id,seller_id,title,description,game_id,listing_type,condition,language,price_amount,currency,quantity,rarity,finish,set_name,set_code,collector_number,edition,grading_company,grading_grade,created_at,listing_images(storage_path,image_type,sort_order)")
       .eq("status","active").order("created_at",{ascending:false}).limit(100);
     if(error) throw error;
     const sellerIds=[...new Set((rows||[]).map(row=>row.seller_id).filter(Boolean))];
@@ -188,13 +190,14 @@ async function loadMarketplaceListings() {
       const profile=profileById.get(row.seller_id);
       const seller=profile?.username||profile?.display_name||"Cardpedia seller";
       const game=gameToLabel[row.game_id]||row.game_id;
-      const note=[row.set_name,row.collector_number,row.edition,row.language].filter(Boolean).join(" · ")||row.description||row.rarity||"";
+      const finishLabels={non_holo:"Non-Holo",holofoil:"Holofoil",reverse:"Reverse Holo",other:"Special foil"};
+      const note=[row.set_name,row.collector_number,row.edition,finishLabels[row.finish]||row.finish,row.language].filter(Boolean).join(" · ")||row.description||row.rarity||"";
       return {
         id:row.id,name:row.title,game,category:game,price:Number(row.price_amount||0),quantity:row.quantity,
         condition:conditionToLabel[row.condition]||row.condition,badge:row.condition==="graded"?(row.grading_company+" "+row.grading_grade):row.rarity||"New listing",
         seller,rating:"New seller",emoji:"✦",art:"",visual:"visual-gold",
         mode:row.listing_type==="sale"?"buy":row.listing_type==="trade"?"trade":"both",
-        note,imageUrl:photo?signedByPath.get(photo.storage_path)||"": "",currency:row.currency||"EUR"
+        note,imageUrl:photo?signedByPath.get(photo.storage_path)||"": "",setName:row.set_name,setCode:row.set_code,collectorNumber:row.collector_number,rarityLabel:row.rarity,finish:row.finish,currency:row.currency||"EUR"
       };
     });
     if(liveListings.length){
@@ -398,6 +401,7 @@ document.querySelector("#sort-select").addEventListener("change", (event) => {
   state.sort = event.target.value;
   renderListings();
 });
+document.querySelector("#finish-filter").addEventListener("change", (event) => { state.finish = event.target.value; renderListings(); });
 document.querySelector("#condition-filter").addEventListener("change", (event) => {
   state.condition = event.target.value;
   renderListings();
@@ -599,6 +603,7 @@ listingForm.addEventListener("submit", async (event) => {
       condition: conditionMap[form.get("condition")],
       language: form.get("language"),
       rarity,
+      finish: String(form.get("finish") || "non_holo"),
       grading_company: isGraded ? String(form.get("grading_company")).trim() : null,
       grading_grade: isGraded ? String(form.get("grading_grade")).trim() : null,
       grading_certification_number: isGraded ? (String(form.get("grading_certification_number") || "").trim() || null) : null,
