@@ -502,10 +502,15 @@ function openAuthModal() {
   if (window.cardpediaSession?.user?.email) {
     document.querySelector("#auth-title").textContent = "Your account";
     document.querySelector("#auth-description").textContent = window.cardpediaSession.user.email;
+    const accountUser = window.cardpediaSession.user;
+    const username = accountUser.user_metadata?.display_name || accountUser.email?.split("@")[0] || "Collector";
+    document.querySelector("#account-username").textContent = username.startsWith("@") ? username : "@" + username.replace(/\\s+/g, "");
+    document.querySelector("#account-identity").hidden = false;
     document.querySelector("#auth-form").hidden = true;
     document.querySelector("#auth-switch").hidden = true;
     document.querySelector("#auth-signout").hidden = false;
   } else {
+    document.querySelector("#account-identity").hidden = true;
     document.querySelector("#auth-form").hidden = false;
     document.querySelector("#auth-switch").hidden = false;
   }
