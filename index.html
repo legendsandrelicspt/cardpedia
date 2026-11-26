@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script id="cardpedia-supabase-config" src="supabase-config.js"></script>
-    <script src="app.js?v=22" defer></script>
+    <script src="app.js?v=23" defer></script>
   </head>
   <body>
     <div class="announcement-bar"><span>THE EUROPEAN COLLECTOR'S MARKETPLACE</span><span class="announcement-note">Independent collectors · 20+ countries</span></div>
@@ -209,7 +209,7 @@
           <p>Choose the game first. For Pokémon, search the catalogue and select the exact card. Other games can be entered manually.</p>
           <div class="catalog-search" id="pokemon-catalog-search-wrap" hidden>
             <strong>Pokémon catalogue</strong>
-            <label>Search card<input id="pokemon-card-search" type="search" placeholder="e.g. Charizard, Pikachu, Mewtwo" autocomplete="off" /></label>
+            <label>Search card<input id="pokemon-card-search" type="search" placeholder="e.g. Charizard, Pikachu, Mewtwo" autocomplete="off" /><small>Compare the artwork, set, card number and available printings before selecting. The scanner does not confirm 1st Edition by itself.</small></label>
             <div id="pokemon-card-results" class="catalog-search-results" aria-live="polite"></div>
             <p id="pokemon-card-selection" class="catalog-selection-note">No card selected yet.</p>
             <div id="pokemon-catalog-preview" class="pokemon-catalog-preview" hidden><img id="pokemon-catalog-image" alt="Selected Pokémon card catalogue image" /><span>Catalogue image preview · not a condition photo</span></div>
