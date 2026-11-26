@@ -690,6 +690,7 @@ document.addEventListener("keydown", (event) => {
 renderListings();
 renderCounts();
 renderCart();
+loadMarketplaceListings();
 
 
 const authModal = document.querySelector("#auth-modal");
