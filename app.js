@@ -190,7 +190,7 @@ async function loadMarketplaceListings() {
       const profile=profileById.get(row.seller_id);
       const seller=profile?.username||profile?.display_name||"Cardpedia seller";
       const game=gameToLabel[row.game_id]||row.game_id;
-      const finishLabels={non_holo:"Non-Holo",holofoil:"Holofoil",reverse:"Reverse Holo",other:"Special foil"};
+      const finishLabels={non_holo:"Non-Holo",holofoil:"Holofoil",reverse:"Reverse Holo",stamped:"Stamped",other:"Special foil"};
       const note=[row.set_name,row.collector_number,row.edition,finishLabels[row.finish]||row.finish,row.language].filter(Boolean).join(" · ")||row.description||row.rarity||"";
       return {
         id:row.id,name:row.title,game,category:game,price:Number(row.price_amount||0),quantity:row.quantity,
