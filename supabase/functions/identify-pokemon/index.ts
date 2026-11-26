@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     if (image.size > 12 * 1024 * 1024) return json({ error: "Image must be smaller than 12 MB." }, 413);
     const payload = new FormData();
     payload.append("image", image, image.name || "card-photo.jpg");
-    const upstream = await fetch("https://api.cardsight.ai/v1/identify/card", {
+    const upstream = await fetch("https://api.cardsight.ai/v1/identify/card/pokemon", {
       method: "POST",
       headers: { "X-API-Key": apiKey },
       body: payload,
