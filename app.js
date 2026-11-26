@@ -877,22 +877,37 @@ async function openAuthModal() {
     const { data: profile } = await supabaseClient.from("profiles").select("username").eq("id", accountUser.id).maybeSingle();
     const username = profile?.username || accountUser.user_metadata?.username || accountUser.email?.split("@")[0] || "collector";
     document.querySelector("#account-username").textContent = "@" + username;
-    document.querySelector("#my-listings-section").hidden = false;
-    loadMyListings();
+    
     document.querySelector("#account-identity").hidden = false;
     document.querySelector("#auth-form").hidden = true;
     document.querySelector("#auth-switch").hidden = true;
     document.querySelector("#auth-signout").hidden = false;
   } else {
     document.querySelector("#account-identity").hidden = true;
-    document.querySelector("#my-listings-section").hidden = true;
+    
     document.querySelector("#auth-form").hidden = false;
     document.querySelector("#auth-switch").hidden = false;
   }
   openLayer(authModal);
 }
 
-document.querySelector("#account-button")?.addEventListener("click", openAuthModal);
+document.querySelector("#account-button")?.addEventListener("click", () => {
+  if(window.cardpediaSession?.user?.id) showMyListingsPage();
+  else openAuthModal();
+});
+document.querySelector("#back-to-marketplace").addEventListener("click",showMarketplacePage);
+function showMyListingsPage(){
+  closeLayers();
+  document.querySelector("body > main:not(#my-listings-page)").hidden=true;
+  document.querySelector("#my-listings-page").hidden=false;
+  document.querySelector("#my-listings-page").scrollIntoView({behavior:"instant",block:"start"});
+  loadMyListings();
+}
+function showMarketplacePage(){
+  document.querySelector("#my-listings-page").hidden=true;
+  document.querySelector("body > main:not(#my-listings-page)").hidden=false;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
 document.querySelector("#auth-switch")?.addEventListener("click", (event) => {
   if (event.target.closest("#auth-toggle")) setAuthMode(authMode === "login" ? "signup" : "login");
 });
