@@ -403,35 +403,126 @@ function openListingModal() {
 ["#sell-button", "#hero-sell-button", "#banner-sell-button"].forEach((selector) => {
   document.querySelector(selector).addEventListener("click", openListingModal);
 });
-document.querySelector("#listing-form").addEventListener("submit", (event) => {
+const listingForm = document.querySelector("#listing-form");
+const listingFeedback = document.querySelector("#listing-form-feedback");
+const listingSubmit = document.querySelector("#listing-submit");
+const defectCheckbox = listingForm.querySelector("[name='has_defects']");
+defectCheckbox.addEventListener("change", () => {
+  document.querySelector("#defect-photos-wrap").hidden = !defectCheckbox.checked;
+  listingForm.querySelector("[name='photo_defects']").required = defectCheckbox.checked;
+});
+listingForm.querySelector("[name='rarity']").addEventListener("change", (event) => {
+  const rare = ["rare","double rare","ultra rare","illustration rare","special illustration rare","secret rare","mythic rare","manga rare","enchanted"].includes(event.target.value);
+  listingForm.querySelector("[name='photo_details']").required = rare;
+});
+function validPhoto(file) {
+  return file && ["image/jpeg","image/png","image/webp"].includes(file.type) && file.size <= 8 * 1024 * 1024;
+}
+listingForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const form = new FormData(event.currentTarget);
-  const game = form.get("game");
-  const modeValue = form.get("mode");
-  const item = {
-    id: Date.now(),
-    name: form.get("name").trim(),
-    game,
-    category: game,
-    price: Number(form.get("price")),
-    condition: form.get("condition"),
-    badge: modeValue === "trade" ? "For trade" : "New listing",
-    seller: "you",
-    rating: "★ new",
-    emoji: game === "Pokémon" ? "✦" : game === "Magic" ? "◈" : game === "One Piece" ? "☠" : "♢",
-    art: game === "Sealed" ? "art-sealed" : game === "Magic" ? "art-magic" : game === "One Piece" ? "art-pirate" : game === "Yu-Gi-Oh!" ? "art-dragon" : "art-pokemon",
-    visual: "visual-gold",
-    mode: modeValue,
-    note: form.get("notes").trim() || (form.get("condition") === "sealed" ? "Sealed · ask seller for details" : `${form.get("condition")} · ask seller for details`),
+  listingFeedback.textContent = "";
+  const session = window.cardpediaSession;
+  if (!session?.user) {
+    listingFeedback.textContent = "Please sign in before creating a listing.";
+    return;
+  }
+  const form = new FormData(listingForm);
+  const front = form.get("photo_front");
+  const back = form.get("photo_back");
+  const details = [...listingForm.querySelector("[name='photo_details']").files];
+  const defects = [...listingForm.querySelector("[name='photo_defects']").files];
+  const rarity = String(form.get("rarity"));
+  const rare = ["rare","double rare","ultra rare","illustration rare","special illustration rare","secret rare","mythic rare","manga rare","enchanted"].includes(rarity);
+  if (!validPhoto(front) || !validPhoto(back) || details.some(file => !validPhoto(file)) || defects.some(file => !validPhoto(file))) {
+    listingFeedback.textContent = "Use JPG, PNG or WebP photos, each up to 8 MB.";
+    return;
+  }
+  if (rare && details.length < 2) {
+    listingFeedback.textContent = "Rare and higher cards need at least two detail photos.";
+    return;
+  }
+  if (defectCheckbox.checked && defects.length === 0) {
+    listingFeedback.textContent = "Add photos showing every reported damage or imperfection.";
+    return;
+  }
+  if (!supabaseClient) {
+    listingFeedback.textContent = "The listing service is currently unavailable.";
+    return;
+  }
+  const gameNames = {
+    "Pokémon":"pokemon", "Magic":"mtg", "One Piece":"onepiece",
+    "Yu-Gi-Oh!":"yugioh", "Lorcana":"lorcana", "Riftbound":"riftbound", "Sealed":"pokemon"
   };
-  state.listings.unshift(item);
-  saveState();
-  if (state.category !== "all" && state.category !== item.category) resetFilters();
-  closeLayers();
-  event.currentTarget.reset();
-  renderListings();
-  document.querySelector("#mercado").scrollIntoView({ behavior: "smooth" });
-  showToast("Your listing is live on the marketplace!");
+  const modeMap = {buy:"sale",trade:"trade",both:"sale_or_trade"};
+  const conditionMap = {NM:"near_mint",LP:"lightly_played",sealed:"sealed"};
+  listingSubmit.disabled = true;
+  listingFeedback.textContent = "Saving your draft and uploading photos…";
+  let listingId = null;
+  const uploadedPaths = [];
+  try {
+    const { data: draft, error: draftError } = await supabaseClient.from("listings").insert({
+      seller_id: session.user.id,
+      game_id: gameNames[form.get("game")],
+      title: String(form.get("name")).trim(),
+      description: String(form.get("notes") || "").trim(),
+      listing_type: modeMap[form.get("mode")],
+      condition: conditionMap[form.get("condition")],
+      language: form.get("language"),
+      rarity,
+      has_defects: defectCheckbox.checked,
+      price_amount: form.get("mode") === "trade" ? null : Number(form.get("price")),
+      status: "draft"
+    }).select("id").single();
+    if (draftError) throw draftError;
+    listingId = draft.id;
+    const uploads = [
+      {file:front,type:"front"},
+      {file:back,type:"back"},
+      ...details.map(file=>({file,type:"detail"})),
+      ...defects.map(file=>({file,type:"defect"}))
+    ];
+    const metadata = [];
+    for (let index=0; index<uploads.length; index++) {
+      const entry=uploads[index];
+      const extension=entry.file.type==="image/png"?"png":entry.file.type==="image/webp"?"webp":"jpg";
+      const path = session.user.id + "/" + listingId + "/" + entry.type + "-" + index + "-" + crypto.randomUUID() + "." + extension;
+      const {error:uploadError}=await supabaseClient.storage.from("Cardpedia-listings").upload(path,entry.file,{contentType:entry.file.type,upsert:false});
+      if(uploadError) throw uploadError;
+      uploadedPaths.push(path);
+      metadata.push({listing_id:listingId,storage_path:path,image_type:entry.type,sort_order:index});
+    }
+    const {error:imageError}=await supabaseClient.from("listing_images").insert(metadata);
+    if(imageError) throw imageError;
+    const {error:publishError}=await supabaseClient.from("listings").update({status:"active"}).eq("id",listingId).eq("seller_id",session.user.id);
+    if(publishError) throw publishError;
+    const game=form.get("game"), modeValue=form.get("mode");
+    const item={
+      id:Date.now(),name:String(form.get("name")).trim(),game,category:game,
+      price:Number(form.get("price")),condition:form.get("condition"),
+      badge:modeValue==="trade"?"For trade":"New listing",seller:session.user.user_metadata?.username||session.user.email.split("@")[0],
+      rating:"★ new",emoji:game==="Pokémon"?"✦":game==="Magic"?"◈":game==="One Piece"?"☠":"♢",
+      art:game==="Sealed"?"art-sealed":game==="Magic"?"art-magic":game==="One Piece"?"art-pirate":game==="Yu-Gi-Oh!"?"art-dragon":"art-pokemon",
+      visual:"visual-gold",mode:modeValue,note:String(form.get("notes")||"").trim()||rarity
+    };
+    state.listings.unshift(item);
+    saveState();
+    if(state.category!=="all"&&state.category!==item.category) resetFilters();
+    closeLayers();
+    listingForm.reset();
+    document.querySelector("#defect-photos-wrap").hidden=true;
+    listingForm.querySelector("[name='photo_details']").required=false;
+    renderListings();
+    document.querySelector("#mercado").scrollIntoView({behavior:"smooth"});
+    showToast("Your listing and photos are published.");
+  } catch(error) {
+    console.error("Cardpedia listing publication failed:",error);
+    listingFeedback.textContent = error.message || "The listing could not be published. Your draft may be saved; contact support before retrying.";
+    if(listingId && uploadedPaths.length===0) {
+      // Keep the draft for recovery; never silently delete a seller's work.
+    }
+  } finally {
+    listingSubmit.disabled=false;
+  }
 });
 
 document.querySelector("#checkout-button").addEventListener("click", () => {
