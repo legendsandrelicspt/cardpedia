@@ -109,6 +109,11 @@ async function hydrateDemoPokemonImages() {
       const imageUrl = card.image ? card.image.replace(/\/$/, "") + "/high.webp" : "";
       if (!imageUrl) return;
       demoCard.imageUrl = imageUrl;
+      demoCard.catalogData = card;
+      demoCard.setName = card.set?.name || demoCard.setName;
+      demoCard.collectorNumber = card.localId || demoCard.collectorNumber;
+      demoCard.rarityLabel = card.rarity || demoCard.rarityLabel;
+      demoCard.note = [demoCard.note.split(" · ")[0], card.set?.name || "Evolving Skies"].filter(Boolean).join(" · ");
       const current = state.listings.find(item => String(item.id) === String(demoCard.id));
       if (current && !current.imageUrl) current.imageUrl = imageUrl;
     } catch (error) {
@@ -163,6 +168,7 @@ function productMarkup(item) {
         <div class="product-game"><span class="game-dot game-${gameClass}"></span>${escapeHtml(item.game)}</div>
         <h4>${escapeHtml(item.name)}</h4>
         <div class="product-meta"><span>${conditionLabel}</span><span class="meta-divider"></span><span>${escapeHtml(item.note)}</span></div>
+        ${(item.setName || item.catalogData?.set?.name) ? `<div class="product-set-line">Set: <strong>${escapeHtml(item.setName || item.catalogData.set.name)}</strong></div>` : ""}
         <div class="seller-line"><span class="seller"><span class="seller-avatar">${escapeHtml(item.seller.charAt(0).toUpperCase())}</span>${escapeHtml(item.seller)}</span><span class="seller-rating">${item.rating}</span></div>
         <div class="product-price">
           <strong>${euro(item.price)} <small>+ shipping</small></strong>
@@ -408,7 +414,37 @@ function openTransactionModal(type, items = []) {
   openLayer(document.querySelector("#transaction-modal"));
 }
 
+function openListingDetails(item) {
+  const detail = document.querySelector("#listing-detail-content");
+  const card = item.catalogData || {};
+  const setName = item.setName || card.set?.name || item.note?.split(" · ").slice(-1)[0] || "Not specified";
+  const number = item.collectorNumber || card.localId || "Not specified";
+  const fields = [
+    ["Game",item.game],["Set",setName],["Card number",number],["Rarity",item.rarityLabel || card.rarity || "Not specified"],
+    ["Language",item.note?.split(" · ")[0] || "Not specified"],["Condition",item.condition],["Edition",item.edition || "Not specified"],["Finish",item.finish || "Not specified"]
+  ];
+  detail.innerHTML = `
+    <div class="listing-detail-layout">
+      <div class="listing-detail-image-wrap">${item.imageUrl ? `<img class="listing-detail-image" src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" />` : `<span class="listing-detail-placeholder">Seller photos / catalogue image unavailable</span>`}</div>
+      <div class="listing-detail-info">
+        <h3 id="listing-detail-title">${escapeHtml(item.name)}</h3>
+        <div class="listing-detail-set"><strong>${escapeHtml(setName)}</strong><span>· ${escapeHtml(number)}</span></div>
+        <div class="listing-detail-fields">${fields.map(([label,value])=>`<div class="listing-detail-field"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value || "Not specified")}</strong></div>`).join("")}</div>
+        <div class="listing-detail-seller"><span>Seller: <strong>${escapeHtml(item.seller)}</strong></span><span>${escapeHtml(item.rating)}</span></div>
+        <div class="listing-detail-purchase"><strong>${euro(item.price)}</strong>${item.mode !== "trade" ? `<button class="button button-primary" data-add="${item.id}">Add to basket</button>` : `<button class="button button-primary" data-trade="${item.id}">Propose trade</button>`}</div>
+      </div>
+    </div>`;
+  openLayer(document.querySelector("#listing-detail-modal"));
+}
+
 document.addEventListener("click", (event) => {
+  const cardElement = event.target.closest(".product-card");
+  if (cardElement && !event.target.closest("button,a,input,select")) {
+    const visible = visibleListings();
+    const cardIndex = [...grid.children].indexOf(cardElement);
+    const item = visible[cardIndex];
+    if (item) openListingDetails(item);
+  }
   const favoriteButton = event.target.closest("[data-favorite]");
   if (favoriteButton) {
     const id = String(favoriteButton.dataset.favorite);
