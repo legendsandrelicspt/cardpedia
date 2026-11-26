@@ -22,6 +22,55 @@ const state = {
   favoritesOnly: false,
 };
 
+
+const STORAGE_KEY = "cardpedia-prototype-v1";
+
+function restoreSavedState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if (!saved || saved.version !== 1) return;
+
+    if (Array.isArray(saved.listings)) {
+      const validListings = saved.listings.filter((item) =>
+        item && Number.isFinite(Number(item.id)) &&
+        typeof item.name === "string" && typeof item.game === "string" &&
+        Number.isFinite(Number(item.price)) && Number(item.price) >= 0
+      );
+      state.listings = validListings;
+    }
+
+    if (Array.isArray(saved.favorites)) {
+      state.favorites = new Set(saved.favorites.map(Number).filter(Number.isFinite));
+    }
+
+    if (Array.isArray(saved.cart)) {
+      state.cart = new Map();
+      saved.cart.forEach(({ id, quantity }) => {
+        const item = state.listings.find((listing) => Number(listing.id) === Number(id));
+        const count = Math.floor(Number(quantity));
+        if (item && count > 0) state.cart.set(item.id, { item, quantity: count });
+      });
+    }
+  } catch {
+    // If browser storage is unavailable or corrupted, keep the in-memory prototype usable.
+  }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      version: 1,
+      listings: state.listings,
+      favorites: [...state.favorites],
+      cart: [...state.cart.values()].map(({ item, quantity }) => ({ id: item.id, quantity })),
+    }));
+  } catch {
+    showToast("Browser storage is unavailable. Changes may not survive a refresh.");
+  }
+}
+
+restoreSavedState();
+
 const grid = document.querySelector("#product-grid");
 const overlay = document.querySelector("#overlay");
 const drawer = document.querySelector("#cart-drawer");
@@ -203,6 +252,7 @@ document.addEventListener("click", (event) => {
   if (favoriteButton) {
     const id = Number(favoriteButton.dataset.favorite);
     state.favorites.has(id) ? state.favorites.delete(id) : state.favorites.add(id);
+    saveState();
     renderListings();
     renderCounts();
     showToast(state.favorites.has(id) ? "Added to your favourites." : "Removed from your favourites.");
@@ -213,6 +263,7 @@ document.addEventListener("click", (event) => {
     const item = state.listings.find((listing) => listing.id === Number(addButton.dataset.add));
     const current = state.cart.get(item.id);
     state.cart.set(item.id, { item, quantity: (current?.quantity || 0) + 1 });
+    saveState();
     renderCounts();
     renderCart();
     showToast("Added to your basket.");
@@ -231,6 +282,7 @@ document.addEventListener("click", (event) => {
   const removeButton = event.target.closest("[data-remove]");
   if (removeButton) {
     state.cart.delete(Number(removeButton.dataset.remove));
+    saveState();
     renderCounts();
     renderCart();
   }
@@ -345,6 +397,7 @@ document.querySelector("#listing-form").addEventListener("submit", (event) => {
     note: form.get("notes").trim() || (form.get("condition") === "sealed" ? "Sealed · ask seller for details" : `${form.get("condition")} · ask seller for details`),
   };
   state.listings.unshift(item);
+  saveState();
   if (state.category !== "all" && state.category !== item.category) resetFilters();
   closeLayers();
   event.currentTarget.reset();
