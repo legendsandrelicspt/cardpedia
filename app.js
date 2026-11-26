@@ -893,7 +893,13 @@ function setAuthMode(mode) {
     ? "Join Cardpedia to manage your collection and publish listings."
     : "Sign in to manage your collection and listings.";
   document.querySelector("#auth-name-wrap").hidden = !signup;
+  document.querySelector("#signup-profile-fields").hidden = !signup;
   document.querySelector("#auth-form [name='username']").required = signup;
+  document.querySelectorAll("#signup-profile-fields input:not([type='radio']), #signup-profile-fields select").forEach((field) => {
+    field.required = signup && ["full_name","country_code","address_line1","postal_code","city"].includes(field.name);
+  });
+  const selectedType = document.querySelector("#auth-form [name='account_type']:checked")?.value || "individual";
+  document.querySelector("#professional-fields").hidden = !signup || selectedType !== "professional";
   document.querySelector("#auth-form [name='password']").autocomplete = signup ? "new-password" : "current-password";
   document.querySelector("#auth-submit").innerHTML = signup ? "Create account <span>→</span>" : "Sign in <span>→</span>";
   document.querySelector("#auth-switch").innerHTML = signup
@@ -945,6 +951,12 @@ function showMarketplacePage(){
   document.querySelector("body > main:not(#my-listings-page)").hidden=false;
   window.scrollTo({top:0,behavior:"smooth"});
 }
+document.querySelector("#auth-form [name='account_type']")?.closest("#signup-profile-fields")?.addEventListener("change", (event) => {
+  if (event.target.name === "account_type") {
+    document.querySelector("#professional-fields").hidden = event.target.value !== "professional";
+  }
+});
+
 document.querySelector("#auth-switch")?.addEventListener("click", (event) => {
   if (event.target.closest("#auth-toggle")) setAuthMode(authMode === "login" ? "signup" : "login");
 });
@@ -964,10 +976,36 @@ document.querySelector("#auth-form")?.addEventListener("submit", async (event) =
     if (authMode === "signup") {
       const username = String(form.get("username")).trim().replace(/^@/, "");
       if (!/^[A-Za-z0-9_]{3,24}$/.test(username)) { feedback.textContent = "Username must be 3–24 characters and use only letters, numbers or underscores."; submit.disabled = false; return; }
+      const accountType = String(form.get("account_type") || "individual");
+      const requiredSignupFields = ["full_name","country_code","address_line1","postal_code","city"];
+      for (const fieldName of requiredSignupFields) {
+        if (!String(form.get(fieldName) || "").trim()) {
+          feedback.textContent = "Please complete your name and full address before creating the account.";
+          submit.disabled = false;
+          return;
+        }
+      }
+      if (!["individual","professional"].includes(accountType)) {
+        feedback.textContent = "Choose a valid account type.";
+        submit.disabled = false;
+        return;
+      }
+      const signupMetadata = {
+        username,
+        account_type: accountType,
+        full_name: String(form.get("full_name")).trim(),
+        country_code: String(form.get("country_code")),
+        address_line1: String(form.get("address_line1")).trim(),
+        address_line2: String(form.get("address_line2") || "").trim(),
+        postal_code: String(form.get("postal_code")).trim(),
+        city: String(form.get("city")).trim(),
+        business_name: String(form.get("business_name") || "").trim(),
+        vat_number: String(form.get("vat_number") || "").trim()
+      };
       result = await supabaseClient.auth.signUp({
         email, password,
         options: {
-          data: { username },
+          data: signupMetadata,
           emailRedirectTo: "https://legendsandrelicspt.github.io/cardpedia/"
         }
       });
@@ -1012,7 +1050,8 @@ if (supabaseClient) {
       supabaseClient.from("profiles").upsert({
         id: session.user.id,
         username: session.user.user_metadata?.username || session.user.email?.split("@")[0]?.replace(/[^A-Za-z0-9_]/g, "").slice(0, 24) || "collector",
-        display_name: session.user.user_metadata?.username || session.user.email?.split("@")[0]
+        display_name: session.user.user_metadata?.username || session.user.email?.split("@")[0],
+        account_type: session.user.user_metadata?.account_type === "professional" ? "professional" : "individual"
       }, { onConflict: "id" }).then(({ error }) => {
         if (error) console.warn("Cardpedia: profile sync could not be completed.", error.message);
       });
