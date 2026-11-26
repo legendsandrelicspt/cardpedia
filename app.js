@@ -26,13 +26,13 @@ async function verifySupabaseConnection() {
 verifySupabaseConnection();
 
 const initialListings = [
-  { id: 1, name: "Umbreon VMAX — Alt Art", game: "Pokémon", category: "Pokémon", price: 289.9, condition: "NM", badge: "Collector's pick", seller: "rita.collects", rating: "★ 4.9", emoji: "☾", art: "art-pokemon", visual: "visual-violet", mode: "buy", note: "English · Evolving Skies" },
+  { id: 1, name: "Umbreon VMAX — Alt Art", game: "Pokémon", category: "Pokémon", price: 289.9, condition: "NM", badge: "Collector's pick", seller: "rita.collects", rating: "★ 4.9", emoji: "☾", art: "art-pokemon", visual: "visual-violet", mode: "buy", note: "English · Evolving Skies", catalogCardId: "swsh7-215" },
   { id: 2, name: "The One Ring — Showcase", game: "Magic", category: "Magic", price: 74.5, condition: "NM", badge: "Foil", seller: "mana_vault", rating: "★ 5.0", emoji: "◉", art: "art-magic", visual: "visual-gold", mode: "trade", note: "English · Tales of Middle-earth" },
   { id: 3, name: "Monkey D. Luffy — Manga Rare", game: "One Piece", category: "One Piece", price: 395, condition: "NM", badge: "Manga rare", seller: "pirateking.pt", rating: "★ 4.8", emoji: "☠", art: "art-pirate", visual: "visual-pink", mode: "buy", note: "Japanese · OP05" },
   { id: 4, name: "Blue-Eyes White Dragon", game: "Yu-Gi-Oh!", category: "Yu-Gi-Oh!", price: 48, condition: "LP", badge: "1st edition", seller: "duelist_den", rating: "★ 4.9", emoji: "♢", art: "art-dragon", visual: "visual-blue", mode: "both", note: "English · SDK-001" },
-  { id: 5, name: "Gengar VMAX — Alt Art", game: "Pokémon", category: "Pokémon", price: 168, condition: "NM", badge: "Popular", seller: "eeveelutions", rating: "★ 5.0", emoji: "👾", art: "art-pokemon", visual: "visual-pink", mode: "trade", note: "English · Fusion Strike" },
+  { id: 5, name: "Gengar VMAX — Alt Art", game: "Pokémon", category: "Pokémon", price: 168, condition: "NM", badge: "Popular", seller: "eeveelutions", rating: "★ 5.0", emoji: "👾", art: "art-pokemon", visual: "visual-pink", mode: "trade", note: "English · Fusion Strike", catalogCardId: "swsh8-271" },
   { id: 6, name: "Booster Box — Prismatic Evolutions", game: "Sealed", category: "Sealed", price: 139.9, condition: "sealed", badge: "Factory sealed", seller: "thepokecorner", rating: "★ 4.9", emoji: "✦", art: "art-sealed", visual: "visual-blue", mode: "buy", note: "Factory sealed · EN" },
-  { id: 7, name: "Charizard ex — Special Illustration", game: "Pokémon", category: "Pokémon", price: 102.5, condition: "NM", badge: "Sleeved", seller: "cardboard.pt", rating: "★ 4.7", emoji: "🔥", art: "art-fire", visual: "visual-gold", mode: "both", note: "Portuguese · 223/197" },
+  { id: 7, name: "Charizard ex — Special Illustration", game: "Pokémon", category: "Pokémon", price: 102.5, condition: "NM", badge: "Sleeved", seller: "cardboard.pt", rating: "★ 4.7", emoji: "🔥", art: "art-fire", visual: "visual-gold", mode: "both", note: "English · Obsidian Flames · 223/197", catalogCardId: "sv3-223" },
   { id: 8, name: "Collector Booster — Tarkir", game: "Sealed", category: "Sealed", price: 31.9, condition: "sealed", badge: "New arrival", seller: "mtg_alfama", rating: "★ 5.0", emoji: "✧", art: "art-box", visual: "visual-violet", mode: "buy", note: "Factory sealed · EN" },
 ];
 
@@ -98,6 +98,26 @@ function saveState() {
 }
 
 restoreSavedState();
+
+async function hydrateDemoPokemonImages() {
+  const demoCards = initialListings.filter(item => item.catalogCardId);
+  await Promise.all(demoCards.map(async demoCard => {
+    try {
+      const response = await fetch("https://api.tcgdex.net/v2/en/cards/" + encodeURIComponent(demoCard.catalogCardId));
+      if (!response.ok) throw new Error("TCGdex card image unavailable");
+      const card = await response.json();
+      const imageUrl = card.image ? card.image.replace(/\/$/, "") + "/high.webp" : "";
+      if (!imageUrl) return;
+      demoCard.imageUrl = imageUrl;
+      const current = state.listings.find(item => String(item.id) === String(demoCard.id));
+      if (current && !current.imageUrl) current.imageUrl = imageUrl;
+    } catch (error) {
+      console.warn("Cardpedia: demo card image could not be loaded.", demoCard.catalogCardId, error.message);
+    }
+  }));
+  renderListings();
+}
+hydrateDemoPokemonImages();
 
 const grid = document.querySelector("#product-grid");
 const overlay = document.querySelector("#overlay");
