@@ -598,3 +598,12 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .listing-product-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #f4f1eb; z-index: 1; }
 
 .product-visual.has-photo .product-art { display: none; }
+
+/* Catalogue-style card artwork placeholder (used only when seller has not uploaded a photo). */
+.catalogue-card-placeholder { position: relative; z-index: 1; width: 142px; height: 190px; padding: 9px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #ffffffc9; border-radius: 9px; background: linear-gradient(145deg,#fffdf8,#e8e2d6); box-shadow: 0 10px 22px #20201824; transform: rotate(-2deg); color: #20251f; }
+.catalogue-card-top { display:flex; justify-content:space-between; gap:5px; font-size:6px; font-weight:700; text-transform:uppercase; letter-spacing:.45px; color:#60675d; }
+.catalogue-card-top span:last-child { text-align:right; }
+.catalogue-card-art { flex:1; margin:9px 0; display:grid; place-items:center; border:1px solid #d9d2c4; border-radius:4px; background:radial-gradient(ellipse at center,#fff 0,#f3f0e8 58%,#e7e1d5 100%); font-family:Georgia,serif; font-size:58px; color:#8d9b83; }
+.catalogue-card-bottom { display:flex; flex-direction:column; gap:5px; }
+.catalogue-card-bottom strong { font-size:8px; line-height:1.25; }
+.catalogue-card-bottom span { font-size:6px; letter-spacing:.55px; color:#77796f; text-transform:uppercase; }
