@@ -353,6 +353,7 @@ function closeLayers() {
   drawer.setAttribute("aria-hidden", "true");
   modal.hidden = true;
   document.querySelector("#transaction-modal").hidden = true;
+  document.querySelector("#listing-detail-modal").hidden = true;
   document.querySelector("#auth-modal")?.setAttribute("hidden", "");
   document.body.classList.remove("modal-open");
 }
